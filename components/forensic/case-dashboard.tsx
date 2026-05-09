@@ -8,6 +8,7 @@ import { EvidencePanel } from "@/components/forensic/evidence-panel"
 import { DataExplorer } from "@/components/forensic/data-explorer"
 import { MapCard } from "@/components/forensic/map-card"
 import { StatsStrip } from "@/components/forensic/stats-strip"
+import { AutopsyAnalysis } from "@/components/forensic/autopsy-analysis"
 import type { ForensicCase } from "@/lib/mock-data"
 
 export function CaseDashboard({ data }: { data: ForensicCase }) {
@@ -25,6 +26,8 @@ export function CaseDashboard({ data }: { data: ForensicCase }) {
             <RiskAnalysis data={data} />
           </div>
         </div>
+
+        <AutopsyAnalysis data={data} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 space-y-4">

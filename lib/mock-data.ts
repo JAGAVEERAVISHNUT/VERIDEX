@@ -68,6 +68,78 @@ export interface AutopsyData {
   examinationDate: string
 }
 
+export type InjurySeverity = "minor" | "moderate" | "severe" | "fatal"
+export type OrganStatus = "normal" | "abnormal" | "damaged" | "critical"
+export type PathologySeverity = "low" | "medium" | "high"
+export type DeathManner = "natural" | "accident" | "suicide" | "homicide" | "undetermined"
+
+export interface InjuryFinding {
+  id: string
+  region: string
+  description: string
+  mechanism: string
+  severity: InjurySeverity
+  perimortem: boolean
+}
+
+export interface OrganFinding {
+  id: string
+  organ: string
+  status: OrganStatus
+  weightGrams?: number
+  observations: string
+}
+
+export interface TissueSample {
+  id: string
+  sample: string
+  technique: string
+  finding: string
+  severity: PathologySeverity
+}
+
+export interface InvestigationNote {
+  id: string
+  timestamp: string
+  author: string
+  role: string
+  content: string
+  tag?: "observation" | "hypothesis" | "follow-up" | "conclusion"
+}
+
+export interface AnalysisSection {
+  injuryPattern: {
+    summary: string
+    findings: InjuryFinding[]
+    overallAssessment: string
+    extractedFrom: string[]
+  }
+  causeOfDeath: {
+    primary: string
+    contributing: string[]
+    manner: DeathManner
+    confidence: number
+    mechanism: string
+    reasoning: string
+    extractedFrom: string[]
+  }
+  organCondition: {
+    summary: string
+    findings: OrganFinding[]
+    extractedFrom: string[]
+  }
+  tissuePathology: {
+    summary: string
+    samples: TissueSample[]
+    extractedFrom: string[]
+  }
+  investigationNotes: {
+    summary: string
+    notes: InvestigationNote[]
+    extractedFrom: string[]
+  }
+}
+
 export interface ForensicCase {
   caseId: string
   caseTitle: string
@@ -89,6 +161,7 @@ export interface ForensicCase {
   mobileRecords: MobileRecord[]
   gpsPoints: GPSPoint[]
   autopsy: AutopsyData
+  analysis?: AnalysisSection
 }
 
 export const mockCase: ForensicCase = {
@@ -543,6 +616,351 @@ export const caseList: CaseSummary[] = [
   },
 ]
 
+// --- Per-case AI-extracted forensic analysis ---
+
+const baseAnalysis: AnalysisSection = {
+  injuryPattern: {
+    summary:
+      "Pattern is consistent with a single peri-mortem blunt-force impact to the posterior cranial region, accompanied by defensive contusions on the dorsal aspect of the left forearm. Distribution suggests the subject was facing away from the assailant at the moment of primary impact.",
+    findings: [
+      {
+        id: "ip1",
+        region: "Posterior cranium — occipital protuberance",
+        description: "Linear depressed fracture, 6.4 cm in length with associated subgaleal hematoma.",
+        mechanism: "Blunt-force trauma — heavy cylindrical object",
+        severity: "fatal",
+        perimortem: true,
+      },
+      {
+        id: "ip2",
+        region: "Left forearm — dorsal aspect",
+        description: "Two parallel ecchymoses, 3 cm and 4 cm, consistent with defensive posture.",
+        mechanism: "Blunt-force trauma — defensive",
+        severity: "moderate",
+        perimortem: true,
+      },
+      {
+        id: "ip3",
+        region: "Right knee — anterior",
+        description: "Superficial abrasion with embedded gravel particulate.",
+        mechanism: "Friction — fall to abrasive surface",
+        severity: "minor",
+        perimortem: true,
+      },
+      {
+        id: "ip4",
+        region: "Lower lip — interior",
+        description: "1.2 cm laceration with bruising of underlying mucosa.",
+        mechanism: "Blunt impact — likely from primary blow",
+        severity: "moderate",
+        perimortem: true,
+      },
+    ],
+    overallAssessment:
+      "Spatial distribution and timing of injuries argue against a fall. Pattern strongly indicates assault from behind followed by collapse onto a hard, gritty surface.",
+    extractedFrom: ["Autopsy Report — Section 3 (External Examination)", "Photographic Evidence Set A"],
+  },
+  causeOfDeath: {
+    primary: "Closed head injury with intracranial hemorrhage",
+    contributing: [
+      "Acute subdural hematoma — left parietal",
+      "Cerebral edema with midline shift (5 mm)",
+      "Mild blood-zolpidem level (8 ng/mL) — non-lethal but sedating",
+    ],
+    manner: "homicide",
+    confidence: 86,
+    mechanism: "Blunt-force trauma to head producing rapid intracranial pressure rise and brainstem compression.",
+    reasoning:
+      "Cause of death is established by autopsy. Manner is classified as homicide based on (a) injury pattern incompatible with self-infliction or accident, (b) defensive injuries, (c) presence of unaccounted sedative, and (d) corroborating CCTV showing a second individual entering the vehicle.",
+    extractedFrom: ["Autopsy Report — Section 7 (Conclusions)", "Toxicology Panel #TX-22841"],
+  },
+  organCondition: {
+    summary:
+      "Major organs are largely unremarkable except for traumatic findings in the brain. No chronic systemic disease identified that would account for sudden death.",
+    findings: [
+      {
+        id: "oc1",
+        organ: "Brain",
+        status: "critical",
+        weightGrams: 1432,
+        observations:
+          "Acute subdural hematoma over left parietal lobe (~85 mL). Cerebral edema with 5 mm midline shift. Coup-contrecoup contusion pattern.",
+      },
+      {
+        id: "oc2",
+        organ: "Heart",
+        status: "normal",
+        weightGrams: 318,
+        observations: "Normal coronary architecture. No infarct. Mild fatty streaking only.",
+      },
+      {
+        id: "oc3",
+        organ: "Lungs (combined)",
+        status: "abnormal",
+        weightGrams: 1040,
+        observations: "Mild pulmonary congestion and patchy edema — agonal pattern, not pre-existing.",
+      },
+      {
+        id: "oc4",
+        organ: "Liver",
+        status: "normal",
+        weightGrams: 1620,
+        observations: "Normal architecture. No steatosis. No cirrhotic change.",
+      },
+      {
+        id: "oc5",
+        organ: "Kidneys",
+        status: "normal",
+        weightGrams: 280,
+        observations: "Bilateral kidneys unremarkable. Normal cortico-medullary differentiation.",
+      },
+      {
+        id: "oc6",
+        organ: "Stomach",
+        status: "abnormal",
+        observations: "~210 mL semi-digested gastric contents. Consistent with meal 2–3 hours pre-mortem.",
+      },
+    ],
+    extractedFrom: ["Autopsy Report — Section 4 (Internal Examination)"],
+  },
+  tissuePathology: {
+    summary:
+      "Histopathology confirms acute hemorrhage and reactive cellular response in cranial tissues. No evidence of chronic disease processes. Findings are consistent with a peri-mortem traumatic event.",
+    samples: [
+      {
+        id: "tp1",
+        sample: "Cerebral cortex — left parietal",
+        technique: "H&E stain, light microscopy",
+        finding: "Acute neuronal injury with red-cell extravasation. Early reactive astrocytic response.",
+        severity: "high",
+      },
+      {
+        id: "tp2",
+        sample: "Subdural membrane",
+        technique: "H&E stain",
+        finding: "Fresh hemorrhage without organizing membrane — confirms acute (not chronic) bleed.",
+        severity: "high",
+      },
+      {
+        id: "tp3",
+        sample: "Myocardium — LV free wall",
+        technique: "H&E + trichrome",
+        finding: "No fibrosis, no contraction band necrosis. Excludes cardiac event as primary cause.",
+        severity: "low",
+      },
+      {
+        id: "tp4",
+        sample: "Pulmonary alveoli",
+        technique: "H&E stain",
+        finding: "Intra-alveolar edema fluid. Consistent with terminal cardiac arrest.",
+        severity: "medium",
+      },
+      {
+        id: "tp5",
+        sample: "Hepatic parenchyma",
+        technique: "H&E + PAS",
+        finding: "Normal lobular architecture. No inflammation. No glycogen depletion.",
+        severity: "low",
+      },
+    ],
+    extractedFrom: ["Histology Lab Report HL-22841", "Autopsy Report — Section 5"],
+  },
+  investigationNotes: {
+    summary:
+      "Multi-source correlation has narrowed the time-of-death window and identified a probable second party at the scene. Pending: ECU vehicle data and burner phone subpoena.",
+    notes: [
+      {
+        id: "in1",
+        timestamp: "2025-03-15 09:14",
+        author: "Dr. R. Patel",
+        role: "Medical Examiner",
+        content:
+          "Core temperature and rigor place TOD between 23:40 and 00:25 UTC. This contradicts witness statement of 01:30 UTC by 65–110 minutes.",
+        tag: "observation",
+      },
+      {
+        id: "in2",
+        timestamp: "2025-03-15 11:42",
+        author: "Det. M. Okafor",
+        role: "Lead Investigator",
+        content:
+          "Mobile device geofence shows it stationary at residence during entire vehicular movement window. Probability of deliberate device-disassociation is high.",
+        tag: "hypothesis",
+      },
+      {
+        id: "in3",
+        timestamp: "2025-03-15 14:08",
+        author: "Forensic Tech S. Nguyen",
+        role: "Digital Forensics",
+        content:
+          "CCTV CAM-114 frame 23:12:41 shows second individual entering passenger seat — face partially obscured. Gait analysis queued.",
+        tag: "follow-up",
+      },
+      {
+        id: "in4",
+        timestamp: "2025-03-15 16:30",
+        author: "Det. M. Okafor",
+        role: "Lead Investigator",
+        content:
+          "Burner number +1-555-0148 contacted three times in the 48 h pre-mortem. Subpoena filed with carrier.",
+        tag: "follow-up",
+      },
+      {
+        id: "in5",
+        timestamp: "2025-03-15 18:55",
+        author: "Dr. R. Patel",
+        role: "Medical Examiner",
+        content:
+          "Manner of death classified as homicide. Cause: closed head injury w/ intracranial hemorrhage. Contributing: trace zolpidem.",
+        tag: "conclusion",
+      },
+    ],
+    extractedFrom: ["Investigator Field Notes", "ME Working File", "Digital Forensics Log"],
+  },
+}
+
+const caseAnalysisOverrides: Record<string, Partial<AnalysisSection>> = {
+  "VX-2025-04398": {
+    injuryPattern: {
+      summary:
+        "Injury pattern is dominated by anterior chest compression and bilateral lower-extremity fractures consistent with high-speed vehicular impact.",
+      findings: [
+        {
+          id: "ip1",
+          region: "Anterior chest — sternal region",
+          description: "Sternal fracture with bilateral rib fractures (ribs 3–7). Flail-segment present.",
+          mechanism: "Steering-wheel impact / restraint compression",
+          severity: "fatal",
+          perimortem: true,
+        },
+        {
+          id: "ip2",
+          region: "Bilateral femurs",
+          description: "Mid-shaft transverse fractures, bilateral.",
+          mechanism: "Dashboard impact",
+          severity: "severe",
+          perimortem: true,
+        },
+        {
+          id: "ip3",
+          region: "Forehead — frontal",
+          description: "Stellate laceration with windshield-glass fragments embedded.",
+          mechanism: "Secondary impact with windshield",
+          severity: "moderate",
+          perimortem: true,
+        },
+      ],
+      overallAssessment:
+        "Pattern is classic frontal high-speed collision. Restraint use is ambiguous — seatbelt mark partially present but inconsistent.",
+      extractedFrom: ["Autopsy Report VX-04398", "Vehicle Damage Report"],
+    },
+    causeOfDeath: {
+      primary: "Multi-system trauma with thoracic crush injury",
+      contributing: ["Bilateral pulmonary contusion", "Hemothorax (left, ~900 mL)", "Severe hemorrhagic shock"],
+      manner: "accident",
+      confidence: 71,
+      mechanism: "Massive blunt-force thoracic trauma producing cardiopulmonary collapse.",
+      reasoning:
+        "Manner is provisionally accident pending ECU forensics. Pre-impact braking pattern is inconsistent with declared mechanical failure — could shift classification.",
+      extractedFrom: ["Autopsy Report VX-04398", "Vehicle ECU Preliminary"],
+    },
+  },
+  "VX-2025-04376": {
+    injuryPattern: {
+      summary:
+        "Pattern is consistent with a 14-meter free fall onto a hard surface — multi-system trauma with cranial, spinal, and lower-extremity involvement.",
+      findings: [
+        {
+          id: "ip1",
+          region: "Cranium — diffuse",
+          description: "Comminuted skull fracture with extensive subarachnoid hemorrhage.",
+          mechanism: "High-energy blunt impact (fall)",
+          severity: "fatal",
+          perimortem: true,
+        },
+        {
+          id: "ip2",
+          region: "Cervical spine — C2-C3",
+          description: "Hangman-type fracture with spinal cord transection.",
+          mechanism: "Hyperextension on impact",
+          severity: "fatal",
+          perimortem: true,
+        },
+        {
+          id: "ip3",
+          region: "Pelvis",
+          description: "Open-book pelvic fracture with sacral involvement.",
+          mechanism: "Vertical compression",
+          severity: "severe",
+          perimortem: true,
+        },
+        {
+          id: "ip4",
+          region: "Right palm",
+          description: "Linear abrasion consistent with rope or strap friction (pre-fall).",
+          mechanism: "Friction — equipment failure",
+          severity: "minor",
+          perimortem: true,
+        },
+      ],
+      overallAssessment:
+        "Pre-fall friction injury on the palm is significant — suggests subject attempted to grip a failing harness component. Maintenance log gap correlates.",
+      extractedFrom: ["Autopsy Report VX-04376", "Site Safety Inspection"],
+    },
+    causeOfDeath: {
+      primary: "Polytrauma from industrial fall — 14 m",
+      contributing: ["High cervical cord transection", "Diffuse axonal injury", "Hemorrhagic shock"],
+      manner: "undetermined",
+      confidence: 64,
+      mechanism: "Sudden deceleration injury producing cranial, spinal, and pelvic destruction.",
+      reasoning:
+        "Cause of death is unambiguously the fall. Manner is undetermined pending investigation of harness tampering and unauthorized badge swipes preceding the event.",
+      extractedFrom: ["Autopsy Report VX-04376", "Equipment Forensics Pending"],
+    },
+  },
+  "VX-2025-04298": {
+    injuryPattern: {
+      summary: "No external trauma. Internal examination unremarkable for injury.",
+      findings: [
+        {
+          id: "ip1",
+          region: "External examination",
+          description: "No bruising, lacerations, or punctures noted.",
+          mechanism: "N/A",
+          severity: "minor",
+          perimortem: false,
+        },
+      ],
+      overallAssessment: "Death is consistent with a non-traumatic medical event.",
+      extractedFrom: ["Autopsy Report VX-04298"],
+    },
+    causeOfDeath: {
+      primary: "Acute myocardial infarction",
+      contributing: ["Severe coronary atherosclerosis", "Documented hypertension", "Type-2 diabetes mellitus"],
+      manner: "natural",
+      confidence: 94,
+      mechanism: "Occlusive thrombus in left anterior descending artery producing fatal arrhythmia.",
+      reasoning:
+        "Histopathology and physician records align. Toxicology negative for substances of interest. No suspicious circumstances.",
+      extractedFrom: ["Autopsy Report VX-04298", "Attending Physician Records"],
+    },
+  },
+}
+
+function buildAnalysisFor(caseId: string): AnalysisSection {
+  const override = caseAnalysisOverrides[caseId]
+  if (!override) return baseAnalysis
+  return {
+    injuryPattern: override.injuryPattern ?? baseAnalysis.injuryPattern,
+    causeOfDeath: override.causeOfDeath ?? baseAnalysis.causeOfDeath,
+    organCondition: override.organCondition ?? baseAnalysis.organCondition,
+    tissuePathology: override.tissuePathology ?? baseAnalysis.tissuePathology,
+    investigationNotes: override.investigationNotes ?? baseAnalysis.investigationNotes,
+  }
+}
+
+mockCase.analysis = baseAnalysis
+
 export function getCaseById(caseId: string): ForensicCase | null {
   if (caseId === mockCase.caseId) return mockCase
   const summary = caseList.find((c) => c.caseId === caseId)
@@ -560,5 +978,6 @@ export function getCaseById(caseId: string): ForensicCase | null {
     openedDate: summary.openedDate,
     lastUpdated: summary.lastUpdated,
     summary: summary.blurb,
+    analysis: buildAnalysisFor(summary.caseId),
   }
 }

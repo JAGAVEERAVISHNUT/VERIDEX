@@ -1,5 +1,17 @@
 import Link from "next/link"
-import { ArrowLeft, ShieldCheck, Lock, Cpu, FileSearch } from "lucide-react"
+import {
+  ArrowLeft,
+  ShieldCheck,
+  Lock,
+  Cpu,
+  FileSearch,
+  ShieldAlert,
+  AlertTriangle,
+  HeartPulse,
+  Microscope,
+  NotebookPen,
+  Sparkles,
+} from "lucide-react"
 import { TopNav } from "@/components/forensic/top-nav"
 import { UploadDropzone } from "@/components/forensic/upload-dropzone"
 import { Button } from "@/components/ui/button"
@@ -50,7 +62,30 @@ export default function UploadPage() {
           />
         </div>
 
-        <section className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-3">
+        <section className="mt-8 rounded-lg border border-primary/30 bg-primary/5 p-5">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/15 ring-1 ring-primary/30">
+              <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">
+                AI extracts five forensic dimensions per case
+              </h3>
+              <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Output appears in each case&apos;s Autopsy &amp; Forensic Analysis panel
+              </p>
+            </div>
+          </div>
+          <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            <AnalysisChip icon={ShieldAlert} label="Injury Pattern" />
+            <AnalysisChip icon={AlertTriangle} label="Cause of Death" />
+            <AnalysisChip icon={HeartPulse} label="Organ Condition" />
+            <AnalysisChip icon={Microscope} label="Tissue Pathology" />
+            <AnalysisChip icon={NotebookPen} label="Investigation Notes" />
+          </ul>
+        </section>
+
+        <section className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
           <InfoTile
             icon={Cpu}
             title="AI Pipeline"
@@ -119,5 +154,14 @@ function InfoTile({
       <div className="text-sm font-medium text-foreground">{title}</div>
       <p className="mt-1 text-xs text-muted-foreground leading-relaxed text-pretty">{text}</p>
     </div>
+  )
+}
+
+function AnalysisChip({ icon: Icon, label }: { icon: typeof Cpu; label: string }) {
+  return (
+    <li className="flex items-center gap-2 rounded-md border border-border bg-card/70 px-3 py-2">
+      <Icon className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+      <span className="text-xs font-medium text-foreground">{label}</span>
+    </li>
   )
 }

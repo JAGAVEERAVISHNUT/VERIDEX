@@ -444,7 +444,6 @@ export interface CaseSummary {
   blurb: string
 }
 
-// Multi-case index used by the Cases overview and dynamic case routes.
 export const caseList: CaseSummary[] = [
   {
     caseId: "VX-2025-04412",

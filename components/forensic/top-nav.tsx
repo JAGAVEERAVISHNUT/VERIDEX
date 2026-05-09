@@ -10,7 +10,7 @@ const navItems = [
   { href: "/", label: "Cases", icon: FolderOpen },
   { href: "/cases/VX-2025-04412", label: "Dashboard", icon: LayoutDashboard },
   { href: "/upload", label: "Ingest", icon: UploadCloud },
-  { href: "#", label: "Settings", icon: Settings },
+  { href: "/settings", label: "Settings", icon: Settings },
 ]
 
 export function TopNav() {

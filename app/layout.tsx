@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   description:
     "AI-powered forensic investigation platform. Analyze autopsy reports, correlate digital evidence, and surface anomalies across CCTV, mobile, and GPS data.",
   generator: "v0.app",
+  icons: [],
 }
 
 export default function RootLayout({

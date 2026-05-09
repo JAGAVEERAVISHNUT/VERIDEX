@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
 import { TopNav } from "@/components/forensic/top-nav"
 import { CaseDashboard } from "@/components/forensic/case-dashboard"
 import { getCaseById, caseList } from "@/lib/mock-data"
@@ -23,7 +22,6 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
             href="/cases"
             className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             <span className="font-mono uppercase tracking-wider">Back to Cases</span>
           </Link>
         </div>

@@ -2,15 +2,15 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Fingerprint, LayoutDashboard, UploadCloud, FolderOpen, Settings, Bell, Search } from "lucide-react"
+import { Bell, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
 const navItems = [
-  { href: "/", label: "Cases", icon: FolderOpen },
-  { href: "/cases/VX-2025-04412", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/upload", label: "Ingest", icon: UploadCloud },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/", label: "Cases" },
+  { href: "/cases/VX-2025-04412", label: "Dashboard" },
+  { href: "/upload", label: "Ingest" },
+  { href: "/settings", label: "Settings" },
 ]
 
 export function TopNav() {
@@ -20,9 +20,6 @@ export function TopNav() {
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="flex h-14 items-center gap-4 px-4 md:px-6">
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/15 ring-1 ring-primary/30">
-            <Fingerprint className="h-4 w-4 text-primary" aria-hidden="true" />
-          </div>
           <span className="font-mono text-sm font-semibold tracking-tight">VERIDEX</span>
           <span className="hidden md:inline-flex items-center rounded-sm bg-muted px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
             Forensic Intelligence
@@ -32,7 +29,6 @@ export function TopNav() {
         <nav className="hidden md:flex items-center gap-1 ml-4">
           {navItems.map((item) => {
             const active = item.href === pathname
-            const Icon = item.icon
             return (
               <Link
                 key={item.label}
@@ -44,7 +40,6 @@ export function TopNav() {
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
                 )}
               >
-                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                 {item.label}
               </Link>
             )

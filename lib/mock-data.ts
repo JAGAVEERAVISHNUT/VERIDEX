@@ -427,3 +427,138 @@ export const evidenceVolumeData = [
   { name: "Witness", count: 6 },
   { name: "Forensic", count: 14 },
 ]
+
+export interface CaseSummary {
+  caseId: string
+  caseTitle: string
+  status: CaseStatus
+  riskLevel: RiskLevel
+  riskScore: number
+  jurisdiction: string
+  leadInvestigator: string
+  openedDate: string
+  lastUpdated: string
+  evidenceCount: number
+  anomalyCount: number
+  subjects: number
+  blurb: string
+}
+
+export const caseList: CaseSummary[] = [
+  {
+    caseId: "VX-2025-04412",
+    caseTitle: "Riverside District — Unattended Death Investigation",
+    status: "active",
+    riskLevel: "high",
+    riskScore: 78,
+    jurisdiction: "Metro Forensics Division — Sector 7",
+    leadInvestigator: "Det. M. Okafor",
+    openedDate: "Mar 15, 2025",
+    lastUpdated: "2 hours ago",
+    evidenceCount: 507,
+    anomalyCount: 5,
+    subjects: 3,
+    blurb:
+      "AI engine flags spatial mismatch between subject device and vehicle GPS. Witness statement contradicts autopsy TOD by 65 minutes.",
+  },
+  {
+    caseId: "VX-2025-04398",
+    caseTitle: "Harbor Pier 9 — Vehicular Manslaughter",
+    status: "review",
+    riskLevel: "medium",
+    riskScore: 54,
+    jurisdiction: "Coastal Division — Sector 3",
+    leadInvestigator: "Det. K. Vance",
+    openedDate: "Mar 11, 2025",
+    lastUpdated: "Yesterday",
+    evidenceCount: 284,
+    anomalyCount: 2,
+    subjects: 2,
+    blurb:
+      "Telematics show pre-impact braking inconsistent with driver's claim of mechanical failure. Awaiting ECU forensics.",
+  },
+  {
+    caseId: "VX-2025-04376",
+    caseTitle: "Northgate Tower — Industrial Fatality",
+    status: "active",
+    riskLevel: "critical",
+    riskScore: 91,
+    jurisdiction: "Metro Forensics Division — Sector 2",
+    leadInvestigator: "Det. A. Reyes",
+    openedDate: "Mar 08, 2025",
+    lastUpdated: "47 minutes ago",
+    evidenceCount: 612,
+    anomalyCount: 8,
+    subjects: 4,
+    blurb:
+      "Safety harness failure correlated with maintenance log gaps. Multiple unauthorized badge swipes detected pre-event.",
+  },
+  {
+    caseId: "VX-2025-04341",
+    caseTitle: "Eastside Plaza — Suspicious Disappearance",
+    status: "active",
+    riskLevel: "high",
+    riskScore: 72,
+    jurisdiction: "Metro Forensics Division — Sector 5",
+    leadInvestigator: "Det. J. Chen",
+    openedDate: "Mar 03, 2025",
+    lastUpdated: "5 hours ago",
+    evidenceCount: 198,
+    anomalyCount: 4,
+    subjects: 2,
+    blurb:
+      "Last known CCTV ping at 22:47 — mobile device powered off 6 minutes later. No further telemetry recovered.",
+  },
+  {
+    caseId: "VX-2025-04298",
+    caseTitle: "Westbrook Apartments — Cause of Death Review",
+    status: "review",
+    riskLevel: "low",
+    riskScore: 24,
+    jurisdiction: "Metro Forensics Division — Sector 7",
+    leadInvestigator: "Det. M. Okafor",
+    openedDate: "Feb 24, 2025",
+    lastUpdated: "3 days ago",
+    evidenceCount: 86,
+    anomalyCount: 0,
+    subjects: 1,
+    blurb:
+      "Toxicology and autopsy align with attending physician records. Pending final coroner sign-off.",
+  },
+  {
+    caseId: "VX-2025-04221",
+    caseTitle: "Old Mill Road — Hit and Run",
+    status: "closed",
+    riskLevel: "medium",
+    riskScore: 48,
+    jurisdiction: "Rural Division — Sector 11",
+    leadInvestigator: "Det. P. Holloway",
+    openedDate: "Feb 18, 2025",
+    lastUpdated: "12 days ago",
+    evidenceCount: 142,
+    anomalyCount: 1,
+    subjects: 2,
+    blurb:
+      "Suspect vehicle identified via paint transfer analysis and ALPR cross-reference. Conviction secured.",
+  },
+]
+
+export function getCaseById(caseId: string): ForensicCase | null {
+  if (caseId === mockCase.caseId) return mockCase
+  const summary = caseList.find((c) => c.caseId === caseId)
+  if (!summary) return null
+  // Synthesize a lightweight ForensicCase for non-primary cases by overlaying summary data on the template
+  return {
+    ...mockCase,
+    caseId: summary.caseId,
+    caseTitle: summary.caseTitle,
+    status: summary.status,
+    riskLevel: summary.riskLevel,
+    riskScore: summary.riskScore,
+    jurisdiction: summary.jurisdiction,
+    leadInvestigator: summary.leadInvestigator,
+    openedDate: summary.openedDate,
+    lastUpdated: summary.lastUpdated,
+    summary: summary.blurb,
+  }
+}

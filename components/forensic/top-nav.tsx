@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/", label: "Cases", icon: FolderOpen },
+  { href: "/cases/VX-2025-04412", label: "Dashboard", icon: LayoutDashboard },
   { href: "/upload", label: "Ingest", icon: UploadCloud },
-  { href: "#", label: "Cases", icon: FolderOpen },
   { href: "#", label: "Settings", icon: Settings },
 ]
 

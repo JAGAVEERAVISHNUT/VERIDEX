@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useRef, useState } from "react"
+import Link from "next/link"
 import {
   UploadCloud,
   FileText,
@@ -9,11 +10,15 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
-type UploadStatus = "queued" | "uploading" | "success" | "error"
+type UploadStatus = "uploading" | "analyzing" | "analyzed" | "error"
+
+type AnalysisStage = "parsing" | "extracting" | "correlating" | "done"
 
 interface UploadFile {
   id: string
@@ -21,7 +26,10 @@ interface UploadFile {
   size: number
   progress: number
   status: UploadStatus
+  stage?: AnalysisStage
   error?: string
+  findings?: number
+  caseId?: string
 }
 
 interface DropzoneProps {
@@ -38,6 +46,21 @@ function formatBytes(bytes: number) {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
 }
+
+const STAGE_LABEL: Record<AnalysisStage, string> = {
+  parsing: "Parsing document",
+  extracting: "Extracting forensic findings",
+  correlating: "Correlating with case evidence",
+  done: "Analysis complete",
+}
+
+// Cases the upload UI can attach analyses to (kept in sync with mock-data caseList)
+const ATTACH_CASE_IDS = [
+  "VX-2025-04412",
+  "VX-2025-04376",
+  "VX-2025-04341",
+  "VX-2025-04398",
+]
 
 export function UploadDropzone({
   title,
@@ -67,27 +90,76 @@ export function UploadDropzone({
     [accept, acceptLabel, maxSizeMB],
   )
 
-  const simulateUpload = useCallback((id: string) => {
-    let progress = 0
+  const runAnalysis = useCallback((id: string) => {
+    // Move through pipeline stages without any queueing
+    setFiles((prev) =>
+      prev.map((f) =>
+        f.id === id
+          ? { ...f, status: "analyzing", progress: 0, stage: "parsing" }
+          : f,
+      ),
+    )
+
+    const stages: AnalysisStage[] = ["parsing", "extracting", "correlating"]
+    let stageIdx = 0
+    let pct = 0
+
     const interval = setInterval(() => {
-      progress += Math.random() * 18 + 6
-      if (progress >= 100) {
-        progress = 100
-        clearInterval(interval)
+      pct += Math.random() * 14 + 7
+      if (pct >= (stageIdx + 1) * (100 / stages.length) && stageIdx < stages.length - 1) {
+        stageIdx += 1
         setFiles((prev) =>
           prev.map((f) =>
-            f.id === id ? { ...f, progress: 100, status: "success" } : f,
+            f.id === id ? { ...f, stage: stages[stageIdx], progress: pct } : f,
+          ),
+        )
+      } else if (pct >= 100) {
+        clearInterval(interval)
+        const findings = 3 + Math.floor(Math.random() * 6)
+        const caseId = ATTACH_CASE_IDS[Math.floor(Math.random() * ATTACH_CASE_IDS.length)]
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.id === id
+              ? {
+                  ...f,
+                  status: "analyzed",
+                  progress: 100,
+                  stage: "done",
+                  findings,
+                  caseId,
+                }
+              : f,
           ),
         )
       } else {
         setFiles((prev) =>
-          prev.map((f) =>
-            f.id === id ? { ...f, progress, status: "uploading" } : f,
-          ),
+          prev.map((f) => (f.id === id ? { ...f, progress: pct } : f)),
         )
       }
-    }, 220)
+    }, 180)
   }, [])
+
+  const simulateUpload = useCallback(
+    (id: string) => {
+      let progress = 0
+      const interval = setInterval(() => {
+        progress += Math.random() * 22 + 10
+        if (progress >= 100) {
+          progress = 100
+          clearInterval(interval)
+          // Immediately kick off analysis — no queueing
+          runAnalysis(id)
+        } else {
+          setFiles((prev) =>
+            prev.map((f) =>
+              f.id === id ? { ...f, progress, status: "uploading" } : f,
+            ),
+          )
+        }
+      }, 180)
+    },
+    [runAnalysis],
+  )
 
   const addFiles = useCallback(
     (incoming: FileList | File[]) => {
@@ -99,13 +171,13 @@ export function UploadDropzone({
           name: f.name,
           size: f.size,
           progress: 0,
-          status: err ? "error" : "queued",
+          status: err ? "error" : "uploading",
           error: err ?? undefined,
         }
       })
       setFiles((prev) => [...prev, ...newFiles])
       newFiles.forEach((f) => {
-        if (f.status === "queued") simulateUpload(f.id)
+        if (f.status === "uploading") simulateUpload(f.id)
       })
     },
     [simulateUpload, validate],
@@ -183,7 +255,7 @@ export function UploadDropzone({
           <span className="text-muted-foreground">or click to browse</span>
         </div>
         <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          {acceptLabel} · max {maxSizeMB}MB
+          {acceptLabel} · max {maxSizeMB}MB · auto-analyzed on upload
         </div>
       </div>
 
@@ -205,19 +277,52 @@ export function UploadDropzone({
                       {formatBytes(file.size)}
                     </span>
                   </div>
+
                   {file.status === "uploading" && (
-                    <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full bg-primary transition-all"
-                        style={{ width: `${file.progress}%` }}
-                      />
+                    <>
+                      <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full bg-primary transition-all"
+                          style={{ width: `${file.progress}%` }}
+                        />
+                      </div>
+                      <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mt-1">
+                        Uploading {Math.round(file.progress)}%
+                      </div>
+                    </>
+                  )}
+
+                  {file.status === "analyzing" && (
+                    <>
+                      <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full bg-primary transition-all"
+                          style={{ width: `${file.progress}%` }}
+                        />
+                      </div>
+                      <div className="font-mono text-[10px] uppercase tracking-wider text-primary mt-1">
+                        Analyzing · {STAGE_LABEL[file.stage ?? "parsing"]}
+                      </div>
+                    </>
+                  )}
+
+                  {file.status === "analyzed" && (
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-[color:var(--risk-low)]">
+                        Analyzed · {file.findings} findings extracted
+                      </span>
+                      {file.caseId && (
+                        <Link
+                          href={`/cases/${file.caseId}`}
+                          className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-primary hover:underline"
+                        >
+                          View in {file.caseId}
+                          <ArrowRight className="h-3 w-3" aria-hidden="true" />
+                        </Link>
+                      )}
                     </div>
                   )}
-                  {file.status === "success" && (
-                    <div className="font-mono text-[10px] uppercase tracking-wider text-[color:var(--risk-low)] mt-0.5">
-                      Uploaded · queued for analysis
-                    </div>
-                  )}
+
                   {file.status === "error" && (
                     <div className="font-mono text-[10px] uppercase tracking-wider text-[color:var(--risk-high)] mt-0.5">
                       {file.error}
@@ -228,7 +333,13 @@ export function UploadDropzone({
                   {file.status === "uploading" && (
                     <Loader2 className="h-4 w-4 text-primary animate-spin" aria-hidden="true" />
                   )}
-                  {file.status === "success" && (
+                  {file.status === "analyzing" && (
+                    <Sparkles
+                      className="h-4 w-4 text-primary animate-pulse"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {file.status === "analyzed" && (
                     <CheckCircle2
                       className="h-4 w-4 text-[color:var(--risk-low)]"
                       aria-hidden="true"

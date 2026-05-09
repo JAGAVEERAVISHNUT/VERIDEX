@@ -2,15 +2,15 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { TopNav } from "@/components/forensic/top-nav"
 import { CaseDashboard } from "@/components/forensic/case-dashboard"
-import { getCaseById, caseList } from "@/lib/mock-data"
-
-export function generateStaticParams() {
-  return caseList.map((c) => ({ id: c.caseId }))
-}
+import { getCaseById } from "@/lib/mock-data"
+import { getGeneratedCase } from "@/lib/case-store"
 
 export default async function CasePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const data = getCaseById(id)
+  let data = getGeneratedCase(id)
+  if (!data) {
+    data = getCaseById(id)
+  }
   if (!data) notFound()
 
   return (

@@ -1,34 +1,91 @@
+"use client"
+
 import Link from "next/link"
-import { ArrowLeft, ShieldCheck, Lock, Cpu, FileSearch } from "lucide-react"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { ArrowLeft, ShieldCheck, Lock, Cpu, FileSearch, Sparkles, Loader2 } from "lucide-react"
 import { TopNav } from "@/components/forensic/top-nav"
 import { UploadDropzone } from "@/components/forensic/upload-dropzone"
 import { Button } from "@/components/ui/button"
 
 export default function UploadPage() {
+  const [pdfFiles, setPdfFiles] = useState<File[]>([])
+  const [jsonFiles, setJsonFiles] = useState<File[]>([])
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const router = useRouter()
+
+  const handleAnalyze = async () => {
+    if (pdfFiles.length === 0 && jsonFiles.length === 0) return
+    setIsAnalyzing(true)
+
+    const formData = new FormData()
+    if (pdfFiles[0]) formData.append("pdf", pdfFiles[0])
+    if (jsonFiles[0]) formData.append("json", jsonFiles[0])
+
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        body: formData,
+      })
+      const data = await res.json()
+      if (data.success && data.caseId) {
+        router.push(`/cases/${data.caseId}`)
+      } else {
+        alert("Analysis failed: " + data.error)
+        setIsAnalyzing(false)
+      }
+    } catch (e) {
+      console.error(e)
+      alert("Analysis failed.")
+      setIsAnalyzing(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background bg-grid">
       <TopNav />
       <main className="px-4 md:px-6 py-8 max-w-5xl mx-auto">
-        <div className="mb-6">
-          <Button asChild variant="ghost" size="sm" className="text-muted-foreground -ml-2 mb-3">
-            <Link href="/">
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Back to dashboard
-            </Link>
-          </Button>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-              Evidence Ingestion · Case VX-2025-04412
-            </span>
+        <div className="mb-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
+          <div>
+            <Button asChild variant="ghost" size="sm" className="text-muted-foreground -ml-2 mb-3">
+              <Link href="/">
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Back to dashboard
+              </Link>
+            </Button>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                Evidence Ingestion · New Case
+              </span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+              Ingest Evidence for Analysis
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground max-w-2xl text-pretty">
+              Upload forensic source documents. Our AI engine will parse, structure, and correlate
+              evidence across modalities. All artifacts are encrypted at rest and chain-of-custody
+              logged.
+            </p>
           </div>
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
-            Ingest Evidence for Analysis
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground max-w-2xl text-pretty">
-            Upload forensic source documents. Our AI engine will parse, structure, and correlate
-            evidence across modalities. All artifacts are encrypted at rest and chain-of-custody
-            logged.
-          </p>
+          <div className="mt-2 md:mt-0">
+            <Button 
+              onClick={handleAnalyze} 
+              disabled={isAnalyzing || (pdfFiles.length === 0 && jsonFiles.length === 0)}
+              className="w-full md:w-auto bg-primary hover:bg-primary/90"
+            >
+              {isAnalyzing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Running AI Analysis...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Run AI Pipeline
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -39,6 +96,7 @@ export default function UploadPage() {
             acceptLabel="PDF only"
             icon="pdf"
             maxSizeMB={25}
+            onFilesChanged={setPdfFiles}
           />
           <UploadDropzone
             title="Digital Evidence"
@@ -47,6 +105,7 @@ export default function UploadPage() {
             acceptLabel="JSON only"
             icon="json"
             maxSizeMB={25}
+            onFilesChanged={setJsonFiles}
           />
         </div>
 

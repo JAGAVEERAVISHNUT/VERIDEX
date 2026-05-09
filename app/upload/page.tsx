@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowLeft, ShieldCheck, Lock, Cpu, FileSearch } from "lucide-react"
+import { ArrowLeft, ShieldCheck, Lock, Cpu } from "lucide-react"
 import { TopNav } from "@/components/forensic/top-nav"
 import { UploadDropzone } from "@/components/forensic/upload-dropzone"
 import { Button } from "@/components/ui/button"
@@ -66,34 +66,6 @@ export default function UploadPage() {
             title="Compliance"
             text="CJIS · GDPR · ISO/IEC 27037 aligned. Encrypted at rest with HSM-backed keys."
           />
-        </section>
-
-        <section className="mt-6 rounded-lg border border-border bg-card/60 p-5">
-          <div className="flex items-start gap-3">
-            <FileSearch className="h-5 w-5 text-primary mt-0.5 shrink-0" aria-hidden="true" />
-            <div>
-              <h3 className="text-sm font-semibold text-foreground">Expected Schema</h3>
-              <p className="text-xs text-muted-foreground mt-1 mb-3">
-                Digital evidence JSON should conform to the structured schema below. Unrecognized
-                fields are preserved but not indexed.
-              </p>
-              <pre className="overflow-auto rounded-md border border-border bg-[oklch(0.13_0.005_260)] px-4 py-3 font-mono text-[11px] leading-relaxed text-foreground/85">
-{`{
-  "case_id": "VX-2025-04412",
-  "events": [
-    {
-      "timestamp": "2025-03-14T23:12:00Z",
-      "event_type": "cctv | mobile | gps | witness",
-      "source": "CAM-114 Westbridge",
-      "location": { "lat": 40.7388, "lon": -73.962 },
-      "entity_id": "subject-001",
-      "metadata": {}
-    }
-  ]
-}`}
-              </pre>
-            </div>
-          </div>
         </section>
 
         <footer className="pt-8 pb-6 text-center font-mono text-[10px] uppercase tracking-wider text-muted-foreground">

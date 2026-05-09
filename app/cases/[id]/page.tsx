@@ -3,6 +3,7 @@ import { TopNav } from "@/components/forensic/top-nav"
 import { CaseDashboard } from "@/components/forensic/case-dashboard"
 import { getCaseById, caseList } from "@/lib/mock-data"
 import { apiCaseToForensicCase } from "@/lib/case-adapter"
+import { getGeneratedCase } from "@/lib/case-store"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001"
 
@@ -39,7 +40,20 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
     )
   }
 
-  // 2. Fall back to mock data (for demo cases like VX-2025-04412)
+  // 2. Try generated case store
+  const generatedData = getGeneratedCase(id)
+  if (generatedData) {
+    return (
+      <div className="min-h-screen bg-background bg-grid">
+        <TopNav />
+        <main>
+          <CaseDashboard data={generatedData} />
+        </main>
+      </div>
+    )
+  }
+
+  // 3. Fall back to mock data (for demo cases like VX-2025-04412)
   const mockData = getCaseById(id)
   if (!mockData) notFound()
 

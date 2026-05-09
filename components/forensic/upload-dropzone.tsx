@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   UploadCloud,
   FileText,
@@ -22,6 +22,7 @@ interface UploadFile {
   progress: number
   status: UploadStatus
   error?: string
+  rawFile: File
 }
 
 interface DropzoneProps {
@@ -31,6 +32,7 @@ interface DropzoneProps {
   acceptLabel: string
   icon: "pdf" | "json"
   maxSizeMB?: number
+  onFilesChanged?: (files: File[]) => void
 }
 
 function formatBytes(bytes: number) {
@@ -46,11 +48,18 @@ export function UploadDropzone({
   acceptLabel,
   icon,
   maxSizeMB = 25,
+  onFilesChanged
 }: DropzoneProps) {
   const [files, setFiles] = useState<UploadFile[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const Icon = icon === "pdf" ? FileText : FileJson
+
+  useEffect(() => {
+    if (onFilesChanged) {
+      onFilesChanged(files.map(f => f.rawFile))
+    }
+  }, [files, onFilesChanged])
 
   const validate = useCallback(
     (file: File): string | null => {
@@ -101,6 +110,7 @@ export function UploadDropzone({
           progress: 0,
           status: err ? "error" : "queued",
           error: err ?? undefined,
+          rawFile: f
         }
       })
       setFiles((prev) => [...prev, ...newFiles])
@@ -108,7 +118,7 @@ export function UploadDropzone({
         if (f.status === "queued") simulateUpload(f.id)
       })
     },
-    [simulateUpload, validate],
+    [simulateUpload, validate, onFilesChanged],
   )
 
   const onDrop = (e: React.DragEvent<HTMLDivElement>) => {

@@ -92,6 +92,12 @@ export function UploadDropzone({
           body: formData,
         })
 
+        // Check if response is OK before parsing JSON
+        if (!res.ok) {
+          const text = await res.text()
+          throw new Error(text.slice(0, 100) || `Server error: ${res.status}`)
+        }
+
         const result = await res.json()
 
         if (result.status === "invalid") {

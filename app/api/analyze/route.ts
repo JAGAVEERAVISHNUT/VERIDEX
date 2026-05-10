@@ -133,8 +133,8 @@ export async function POST(req: Request) {
       return Response.json({ status: "invalid", message: "Unsupported file type" }, { status: 422 })
     }
 
-    // Simulate 10 seconds of processing time
-    await new Promise((resolve) => setTimeout(resolve, 10000))
+    // Simulate 3 seconds of processing time (shorter to avoid timeouts)
+    await new Promise((resolve) => setTimeout(resolve, 3000))
 
     // Generate mock case data
     const mockCase = generateMockCase(file.name)

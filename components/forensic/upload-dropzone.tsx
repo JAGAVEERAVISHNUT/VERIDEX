@@ -55,12 +55,7 @@ const STAGE_LABEL: Record<AnalysisStage, string> = {
 }
 
 // Cases the upload UI can attach analyses to (kept in sync with mock-data caseList)
-const ATTACH_CASE_IDS = [
-  "VX-2025-04412",
-  "VX-2025-04376",
-  "VX-2025-04341",
-  "VX-2025-04398",
-]
+const ATTACH_CASE_IDS = ["AUT-2025-0001"]
 
 export function UploadDropzone({
   title,
@@ -308,7 +303,7 @@ export function UploadDropzone({
 
                   {file.status === "analyzed" && (
                     <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-[color:var(--risk-low)]">
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-[color:var(--severity-medium)]">
                         Analyzed · {file.findings} findings extracted
                       </span>
                       {file.caseId && (
@@ -324,7 +319,7 @@ export function UploadDropzone({
                   )}
 
                   {file.status === "error" && (
-                    <div className="font-mono text-[10px] uppercase tracking-wider text-[color:var(--risk-high)] mt-0.5">
+                    <div className="font-mono text-[10px] uppercase tracking-wider text-[color:var(--severity-high)] mt-0.5">
                       {file.error}
                     </div>
                   )}
@@ -341,13 +336,13 @@ export function UploadDropzone({
                   )}
                   {file.status === "analyzed" && (
                     <CheckCircle2
-                      className="h-4 w-4 text-[color:var(--risk-low)]"
+                      className="h-4 w-4 text-[color:var(--severity-medium)]"
                       aria-hidden="true"
                     />
                   )}
                   {file.status === "error" && (
                     <AlertCircle
-                      className="h-4 w-4 text-[color:var(--risk-high)]"
+                      className="h-4 w-4 text-[color:var(--severity-high)]"
                       aria-hidden="true"
                     />
                   )}

@@ -30,7 +30,7 @@ export default function UploadPage() {
           </Button>
           <div className="flex items-center gap-2 mb-2">
             <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-              Evidence Ingestion · Case VX-2025-04412
+              Evidence Ingestion · Case AUT-2025-0001
             </span>
           </div>
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
@@ -112,19 +112,19 @@ export default function UploadPage() {
                 Digital evidence JSON should conform to the structured schema below. Unrecognized
                 fields are preserved but not indexed.
               </p>
-              <pre className="overflow-auto rounded-md border border-border bg-[oklch(0.13_0.005_260)] px-4 py-3 font-mono text-[11px] leading-relaxed text-foreground/85">
+              <pre className="overflow-auto rounded-md border border-border bg-muted px-4 py-3 font-mono text-[11px] leading-relaxed text-foreground/85">
 {`{
-  "case_id": "VX-2025-04412",
-  "events": [
-    {
-      "timestamp": "2025-03-14T23:12:00Z",
-      "event_type": "cctv | mobile | gps | witness",
-      "source": "CAM-114 Westbridge",
-      "location": { "lat": 40.7388, "lon": -73.962 },
-      "entity_id": "subject-001",
-      "metadata": {}
-    }
-  ]
+  "case_id": "AUT-2025-0001",
+  "subject": { "age": 35, "sex": "M", "ethnicity": "African American" },
+  "external_examination": [ { "region": "...", "description": "...", "perimortem": true } ],
+  "organ_findings": [
+    { "organ": "Right lung", "weight_g": 630, "status": "critical", "observations": "..." }
+  ],
+  "pathology_samples": [
+    { "region": "Right pulmonary artery", "finding": "...", "age_estimate": "..." }
+  ],
+  "cause_of_death": { "primary": "...", "manner": "natural" },
+  "investigation_notes": [ { "author": "...", "tag": "observation", "content": "..." } ]
 }`}
               </pre>
             </div>

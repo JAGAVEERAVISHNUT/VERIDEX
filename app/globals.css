@@ -1,93 +1,95 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import 'leaflet/dist/leaflet.css';
 
 @custom-variant dark (&:is(.dark *));
 
-/* Forensic Investigation Theme
+/* Veridex Clinical Theme
    Palette:
-   - Background: deep charcoal (near-black)
-   - Foreground: warm white
-   - Primary accent: amber/forensic-orange
-   - Risk: green / amber / red
-   - Neutrals: zinc/slate grays
+   - Primary:           #1E3A5F  deep navy
+   - Secondary:         #3A6EA5  muted blue
+   - Background:        #FFFFFF  white
+   - Light background:  #F5F7FA
+   - Text:              #1F2937  dark gray
+   - Accent:            #94A3B8  soft gray-blue
 */
 
 :root {
-  --background: oklch(0.16 0.005 260);
-  --foreground: oklch(0.96 0.005 90);
+  --background: #ffffff;
+  --foreground: #1f2937;
 
-  --card: oklch(0.19 0.006 260);
-  --card-foreground: oklch(0.96 0.005 90);
+  --card: #ffffff;
+  --card-foreground: #1f2937;
 
-  --popover: oklch(0.20 0.006 260);
-  --popover-foreground: oklch(0.96 0.005 90);
+  --popover: #ffffff;
+  --popover-foreground: #1f2937;
 
-  /* Amber forensic primary */
-  --primary: oklch(0.78 0.16 70);
-  --primary-foreground: oklch(0.18 0.01 70);
+  --primary: #1e3a5f;
+  --primary-foreground: #ffffff;
 
-  --secondary: oklch(0.24 0.006 260);
-  --secondary-foreground: oklch(0.92 0.005 90);
+  --secondary: #f5f7fa;
+  --secondary-foreground: #1f2937;
 
-  --muted: oklch(0.23 0.006 260);
-  --muted-foreground: oklch(0.65 0.01 260);
+  --muted: #f5f7fa;
+  --muted-foreground: #64748b;
 
-  --accent: oklch(0.26 0.008 260);
-  --accent-foreground: oklch(0.96 0.005 90);
+  --accent: #94a3b8;
+  --accent-foreground: #1f2937;
 
-  --destructive: oklch(0.62 0.22 25);
-  --destructive-foreground: oklch(0.98 0.005 90);
+  --destructive: #1e3a5f;
+  --destructive-foreground: #ffffff;
 
-  --border: oklch(0.28 0.006 260);
-  --input: oklch(0.26 0.006 260);
-  --ring: oklch(0.78 0.16 70);
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #1e3a5f;
 
-  /* Risk semantic colors */
-  --risk-low: oklch(0.72 0.17 150);     /* forensic green */
-  --risk-medium: oklch(0.80 0.16 85);   /* amber/yellow */
-  --risk-high: oklch(0.65 0.22 25);     /* red */
-  --risk-critical: oklch(0.55 0.24 18); /* deep red */
+  /* Severity tokens — kept inside the navy/blue/gray palette
+     low (normal)    -> accent gray-blue
+     medium (note)   -> secondary muted blue
+     high (critical) -> primary navy
+  */
+  --severity-low: #94a3b8;
+  --severity-medium: #3a6ea5;
+  --severity-high: #1e3a5f;
 
-  /* Charts */
-  --chart-1: oklch(0.78 0.16 70);   /* amber */
-  --chart-2: oklch(0.72 0.17 150);  /* green */
-  --chart-3: oklch(0.65 0.22 25);   /* red */
-  --chart-4: oklch(0.70 0.13 220);  /* steel blue */
-  --chart-5: oklch(0.80 0.16 85);   /* yellow */
+  /* Charts in tonal navy/blue/gray progression */
+  --chart-1: #1e3a5f;
+  --chart-2: #3a6ea5;
+  --chart-3: #6b8dba;
+  --chart-4: #94a3b8;
+  --chart-5: #c7d2dd;
 
   --radius: 0.5rem;
 
-  --sidebar: oklch(0.17 0.005 260);
-  --sidebar-foreground: oklch(0.92 0.005 90);
-  --sidebar-primary: oklch(0.78 0.16 70);
-  --sidebar-primary-foreground: oklch(0.18 0.01 70);
-  --sidebar-accent: oklch(0.24 0.006 260);
-  --sidebar-accent-foreground: oklch(0.92 0.005 90);
-  --sidebar-border: oklch(0.26 0.006 260);
-  --sidebar-ring: oklch(0.78 0.16 70);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1f2937;
+  --sidebar-primary: #1e3a5f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5f7fa;
+  --sidebar-accent-foreground: #1f2937;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #1e3a5f;
 }
 
 .dark {
-  --background: oklch(0.16 0.005 260);
-  --foreground: oklch(0.96 0.005 90);
-  --card: oklch(0.19 0.006 260);
-  --card-foreground: oklch(0.96 0.005 90);
-  --popover: oklch(0.20 0.006 260);
-  --popover-foreground: oklch(0.96 0.005 90);
-  --primary: oklch(0.78 0.16 70);
-  --primary-foreground: oklch(0.18 0.01 70);
-  --secondary: oklch(0.24 0.006 260);
-  --secondary-foreground: oklch(0.92 0.005 90);
-  --muted: oklch(0.23 0.006 260);
-  --muted-foreground: oklch(0.65 0.01 260);
-  --accent: oklch(0.26 0.008 260);
-  --accent-foreground: oklch(0.96 0.005 90);
-  --destructive: oklch(0.62 0.22 25);
-  --destructive-foreground: oklch(0.98 0.005 90);
-  --border: oklch(0.28 0.006 260);
-  --input: oklch(0.26 0.006 260);
-  --ring: oklch(0.78 0.16 70);
+  --background: #ffffff;
+  --foreground: #1f2937;
+  --card: #ffffff;
+  --card-foreground: #1f2937;
+  --popover: #ffffff;
+  --popover-foreground: #1f2937;
+  --primary: #1e3a5f;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f7fa;
+  --secondary-foreground: #1f2937;
+  --muted: #f5f7fa;
+  --muted-foreground: #64748b;
+  --accent: #94a3b8;
+  --accent-foreground: #1f2937;
+  --destructive: #1e3a5f;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #1e3a5f;
 }
 
 @theme inline {
@@ -114,10 +116,9 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --color-risk-low: var(--risk-low);
-  --color-risk-medium: var(--risk-medium);
-  --color-risk-high: var(--risk-high);
-  --color-risk-critical: var(--risk-critical);
+  --color-severity-low: var(--severity-low);
+  --color-severity-medium: var(--severity-medium);
+  --color-severity-high: var(--severity-high);
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -150,25 +151,10 @@
   }
 }
 
-/* Subtle grid background for forensic feel */
+/* Subtle clinical grid backdrop for the page background */
 .bg-grid {
   background-image:
-    linear-gradient(to right, oklch(1 0 0 / 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, oklch(1 0 0 / 0.03) 1px, transparent 1px);
-  background-size: 32px 32px;
-}
-
-/* Leaflet dark mode tile filter */
-.leaflet-tile-pane {
-  filter: invert(0.92) hue-rotate(180deg) brightness(0.95) contrast(0.85) saturate(0.6);
-}
-.leaflet-container {
-  background: var(--card) !important;
-}
-.leaflet-control-attribution {
-  background: oklch(0 0 0 / 0.5) !important;
-  color: var(--muted-foreground) !important;
-}
-.leaflet-control-attribution a {
-  color: var(--muted-foreground) !important;
+    linear-gradient(to right, #1e3a5f0a 1px, transparent 1px),
+    linear-gradient(to bottom, #1e3a5f0a 1px, transparent 1px);
+  background-size: 40px 40px;
 }

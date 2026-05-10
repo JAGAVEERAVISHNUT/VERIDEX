@@ -1,7 +1,6 @@
 "use client"
 
 import { useCallback, useRef, useState } from "react"
-import Link from "next/link"
 import {
   UploadCloud,
   FileText,
@@ -11,14 +10,31 @@ import {
   AlertCircle,
   Loader2,
   Sparkles,
-  ArrowRight,
+  Thermometer,
+  Clock,
+  FlaskConical,
+  Wind,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
-type UploadStatus = "uploading" | "analyzing" | "analyzed" | "error"
+type UploadStatus = "uploading" | "analyzing" | "analyzed" | "error" | "invalid"
 
-type AnalysisStage = "parsing" | "extracting" | "correlating" | "done"
+interface AnalysisResult {
+  status: "valid" | "invalid"
+  source_type?: string
+  structured_data?: {
+    body_temperature: string
+    rigor_mortis: string
+    livor_mortis: string
+    environment: string
+  }
+  time_of_death_estimate?: string
+  summary?: string
+  message?: string
+}
 
 interface UploadFile {
   id: string
@@ -26,10 +42,9 @@ interface UploadFile {
   size: number
   progress: number
   status: UploadStatus
-  stage?: AnalysisStage
   error?: string
-  findings?: number
-  caseId?: string
+  result?: AnalysisResult
+  expanded?: boolean
 }
 
 interface DropzoneProps {
@@ -46,16 +61,6 @@ function formatBytes(bytes: number) {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
 }
-
-const STAGE_LABEL: Record<AnalysisStage, string> = {
-  parsing: "Parsing document",
-  extracting: "Extracting forensic findings",
-  correlating: "Correlating with case evidence",
-  done: "Analysis complete",
-}
-
-// Cases the upload UI can attach analyses to (kept in sync with mock-data caseList)
-const ATTACH_CASE_IDS = ["AUT-2025-0001"]
 
 export function UploadDropzone({
   title,
@@ -85,65 +90,72 @@ export function UploadDropzone({
     [accept, acceptLabel, maxSizeMB],
   )
 
-  const runAnalysis = useCallback((id: string) => {
-    // Move through pipeline stages without any queueing
+  const runAnalysis = useCallback(async (id: string, file: File) => {
     setFiles((prev) =>
       prev.map((f) =>
-        f.id === id
-          ? { ...f, status: "analyzing", progress: 0, stage: "parsing" }
-          : f,
+        f.id === id ? { ...f, status: "analyzing", progress: 100 } : f,
       ),
     )
 
-    const stages: AnalysisStage[] = ["parsing", "extracting", "correlating"]
-    let stageIdx = 0
-    let pct = 0
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
 
-    const interval = setInterval(() => {
-      pct += Math.random() * 14 + 7
-      if (pct >= (stageIdx + 1) * (100 / stages.length) && stageIdx < stages.length - 1) {
-        stageIdx += 1
-        setFiles((prev) =>
-          prev.map((f) =>
-            f.id === id ? { ...f, stage: stages[stageIdx], progress: pct } : f,
-          ),
-        )
-      } else if (pct >= 100) {
-        clearInterval(interval)
-        const findings = 3 + Math.floor(Math.random() * 6)
-        const caseId = ATTACH_CASE_IDS[Math.floor(Math.random() * ATTACH_CASE_IDS.length)]
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        body: formData,
+      })
+
+      const result: AnalysisResult = await res.json()
+
+      if (result.status === "invalid") {
         setFiles((prev) =>
           prev.map((f) =>
             f.id === id
               ? {
                   ...f,
-                  status: "analyzed",
-                  progress: 100,
-                  stage: "done",
-                  findings,
-                  caseId,
+                  status: "invalid",
+                  result,
+                  error: result.message ?? "Invalid forensic document.",
                 }
               : f,
           ),
         )
       } else {
         setFiles((prev) =>
-          prev.map((f) => (f.id === id ? { ...f, progress: pct } : f)),
+          prev.map((f) =>
+            f.id === id
+              ? { ...f, status: "analyzed", result, expanded: true }
+              : f,
+          ),
         )
       }
-    }, 180)
+    } catch {
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.id === id
+            ? {
+                ...f,
+                status: "error",
+                error: "Network error — could not reach analysis service.",
+              }
+            : f,
+        ),
+      )
+    }
   }, [])
 
   const simulateUpload = useCallback(
-    (id: string) => {
+    (id: string, file: File) => {
       let progress = 0
       const interval = setInterval(() => {
-        progress += Math.random() * 22 + 10
+        progress += Math.random() * 22 + 12
         if (progress >= 100) {
-          progress = 100
           clearInterval(interval)
-          // Immediately kick off analysis — no queueing
-          runAnalysis(id)
+          setFiles((prev) =>
+            prev.map((f) => (f.id === id ? { ...f, progress: 100 } : f)),
+          )
+          runAnalysis(id, file)
         } else {
           setFiles((prev) =>
             prev.map((f) =>
@@ -151,7 +163,7 @@ export function UploadDropzone({
             ),
           )
         }
-      }, 180)
+      }, 130)
     },
     [runAnalysis],
   )
@@ -171,22 +183,18 @@ export function UploadDropzone({
         }
       })
       setFiles((prev) => [...prev, ...newFiles])
-      newFiles.forEach((f) => {
-        if (f.status === "uploading") simulateUpload(f.id)
+      arr.forEach((f, i) => {
+        const entry = newFiles[i]
+        if (entry.status === "uploading") simulateUpload(entry.id, f)
       })
     },
     [simulateUpload, validate],
   )
 
-  const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    setIsDragging(false)
-    if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files)
-  }
-
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.length) addFiles(e.target.files)
-    e.target.value = ""
+  const toggleExpand = (id: string) => {
+    setFiles((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, expanded: !f.expanded } : f)),
+    )
   }
 
   const removeFile = (id: string) => {
@@ -196,7 +204,7 @@ export function UploadDropzone({
   return (
     <div className="rounded-lg border border-border bg-card/60 p-5">
       <div className="flex items-start gap-3 mb-4">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/15 ring-1 ring-primary/30">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 ring-1 ring-primary/20">
           <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
         </div>
         <div className="min-w-0">
@@ -206,28 +214,20 @@ export function UploadDropzone({
       </div>
 
       <div
-        onDragEnter={(e) => {
-          e.preventDefault()
-          setIsDragging(true)
-        }}
-        onDragOver={(e) => {
-          e.preventDefault()
-          setIsDragging(true)
-        }}
+        onDragEnter={(e) => { e.preventDefault(); setIsDragging(true) }}
+        onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
         onDragLeave={() => setIsDragging(false)}
-        onDrop={onDrop}
+        onDrop={(e) => { e.preventDefault(); setIsDragging(false); if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files) }}
         onClick={() => inputRef.current?.click()}
         className={cn(
           "relative flex flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed cursor-pointer transition-all px-6 py-10 text-center",
           isDragging
             ? "border-primary bg-primary/5"
-            : "border-border bg-secondary/20 hover:border-primary/40 hover:bg-secondary/30",
+            : "border-border bg-secondary/10 hover:border-primary/30 hover:bg-secondary/20",
         )}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") inputRef.current?.click()
-        }}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") inputRef.current?.click() }}
         aria-label={`${title} dropzone`}
       >
         <input
@@ -236,7 +236,7 @@ export function UploadDropzone({
           accept={accept}
           multiple
           className="sr-only"
-          onChange={onChange}
+          onChange={(e) => { if (e.target.files?.length) addFiles(e.target.files); e.target.value = "" }}
         />
         <UploadCloud
           className={cn(
@@ -250,24 +250,20 @@ export function UploadDropzone({
           <span className="text-muted-foreground">or click to browse</span>
         </div>
         <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          {acceptLabel} · max {maxSizeMB}MB · auto-analyzed on upload
+          {acceptLabel} &middot; max {maxSizeMB}MB &middot; AI-analyzed immediately on upload
         </div>
       </div>
 
       {files.length > 0 && (
-        <ul className="mt-4 space-y-2">
+        <ul className="mt-4 space-y-3">
           {files.map((file) => (
-            <li
-              key={file.id}
-              className="rounded-md border border-border bg-secondary/30 px-3 py-2.5"
-            >
-              <div className="flex items-center gap-3">
+            <li key={file.id} className="rounded-md border border-border bg-background overflow-hidden">
+              {/* File row */}
+              <div className="flex items-center gap-3 px-3 py-2.5">
                 <Icon className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-foreground truncate">
-                      {file.name}
-                    </span>
+                    <span className="text-xs font-medium text-foreground truncate">{file.name}</span>
                     <span className="font-mono text-[10px] text-muted-foreground shrink-0">
                       {formatBytes(file.size)}
                     </span>
@@ -276,10 +272,7 @@ export function UploadDropzone({
                   {file.status === "uploading" && (
                     <>
                       <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full bg-primary transition-all"
-                          style={{ width: `${file.progress}%` }}
-                        />
+                        <div className="h-full bg-primary transition-all" style={{ width: `${file.progress}%` }} />
                       </div>
                       <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mt-1">
                         Uploading {Math.round(file.progress)}%
@@ -288,82 +281,159 @@ export function UploadDropzone({
                   )}
 
                   {file.status === "analyzing" && (
-                    <>
-                      <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full bg-primary transition-all"
-                          style={{ width: `${file.progress}%` }}
-                        />
-                      </div>
-                      <div className="font-mono text-[10px] uppercase tracking-wider text-primary mt-1">
-                        Analyzing · {STAGE_LABEL[file.stage ?? "parsing"]}
-                      </div>
-                    </>
+                    <div className="font-mono text-[10px] uppercase tracking-wider text-primary mt-1">
+                      AI analyzing document&hellip;
+                    </div>
                   )}
 
                   {file.status === "analyzed" && (
-                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-[color:var(--severity-medium)]">
-                        Analyzed · {file.findings} findings extracted
-                      </span>
-                      {file.caseId && (
-                        <Link
-                          href={`/cases/${file.caseId}`}
-                          className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-primary hover:underline"
-                        >
-                          View in {file.caseId}
-                          <ArrowRight className="h-3 w-3" aria-hidden="true" />
-                        </Link>
-                      )}
+                    <div className="font-mono text-[10px] uppercase tracking-wider text-green-600 mt-1">
+                      Analysis complete &middot; valid forensic report
+                    </div>
+                  )}
+
+                  {file.status === "invalid" && (
+                    <div className="font-mono text-[10px] uppercase tracking-wider text-amber-600 mt-1">
+                      Invalid &mdash; not a forensic/autopsy document
                     </div>
                   )}
 
                   {file.status === "error" && (
-                    <div className="font-mono text-[10px] uppercase tracking-wider text-[color:var(--severity-high)] mt-0.5">
+                    <div className="font-mono text-[10px] uppercase tracking-wider text-red-600 mt-1">
                       {file.error}
                     </div>
                   )}
                 </div>
+
                 <div className="flex items-center gap-1 shrink-0">
                   {file.status === "uploading" && (
                     <Loader2 className="h-4 w-4 text-primary animate-spin" aria-hidden="true" />
                   )}
                   {file.status === "analyzing" && (
-                    <Sparkles
-                      className="h-4 w-4 text-primary animate-pulse"
-                      aria-hidden="true"
-                    />
+                    <Sparkles className="h-4 w-4 text-primary animate-pulse" aria-hidden="true" />
                   )}
                   {file.status === "analyzed" && (
-                    <CheckCircle2
-                      className="h-4 w-4 text-[color:var(--severity-medium)]"
-                      aria-hidden="true"
-                    />
+                    <>
+                      <CheckCircle2 className="h-4 w-4 text-green-600" aria-hidden="true" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                        onClick={(e) => { e.stopPropagation(); toggleExpand(file.id) }}
+                        aria-label={file.expanded ? "Collapse results" : "Expand results"}
+                      >
+                        {file.expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                      </Button>
+                    </>
+                  )}
+                  {file.status === "invalid" && (
+                    <AlertCircle className="h-4 w-4 text-amber-500" aria-hidden="true" />
                   )}
                   {file.status === "error" && (
-                    <AlertCircle
-                      className="h-4 w-4 text-[color:var(--severity-high)]"
-                      aria-hidden="true"
-                    />
+                    <AlertCircle className="h-4 w-4 text-red-500" aria-hidden="true" />
                   )}
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      removeFile(file.id)
-                    }}
+                    onClick={(e) => { e.stopPropagation(); removeFile(file.id) }}
                     aria-label={`Remove ${file.name}`}
                   >
                     <X className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
+
+              {/* AI result panel — shown when analyzed and expanded */}
+              {file.status === "analyzed" && file.expanded && file.result?.status === "valid" && (
+                <div className="border-t border-border bg-secondary/10 px-4 py-4 space-y-4">
+                  {/* Structured data grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <ResultField
+                      icon={Thermometer}
+                      label="Body Temperature"
+                      value={file.result.structured_data?.body_temperature}
+                    />
+                    <ResultField
+                      icon={FlaskConical}
+                      label="Rigor Mortis"
+                      value={file.result.structured_data?.rigor_mortis}
+                    />
+                    <ResultField
+                      icon={FlaskConical}
+                      label="Livor Mortis"
+                      value={file.result.structured_data?.livor_mortis}
+                    />
+                    <ResultField
+                      icon={Wind}
+                      label="Environment"
+                      value={file.result.structured_data?.environment}
+                    />
+                  </div>
+
+                  {/* TOD estimate */}
+                  {file.result.time_of_death_estimate && (
+                    <div className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2.5 flex items-start gap-2.5">
+                      <Clock className="h-4 w-4 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+                      <div>
+                        <p className="font-mono text-[10px] uppercase tracking-wider text-primary mb-0.5">
+                          Time-of-Death Estimate
+                        </p>
+                        <p className="text-xs text-foreground leading-relaxed">
+                          {file.result.time_of_death_estimate}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* AI Summary */}
+                  {file.result.summary && (
+                    <div>
+                      <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">
+                        Forensic Summary
+                      </p>
+                      <p className="text-xs text-foreground leading-relaxed">
+                        {file.result.summary}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Source type badge */}
+                  <div className="flex items-center justify-end">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Source: {file.result.source_type}
+                    </span>
+                  </div>
+                </div>
+              )}
             </li>
           ))}
         </ul>
       )}
+    </div>
+  )
+}
+
+function ResultField({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Thermometer
+  label: string
+  value?: string
+}) {
+  return (
+    <div className="rounded-md border border-border bg-background px-3 py-2.5">
+      <div className="flex items-center gap-1.5 mb-1">
+        <Icon className="h-3 w-3 text-primary" aria-hidden="true" />
+        <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          {label}
+        </span>
+      </div>
+      <p className="text-xs text-foreground leading-relaxed">
+        {value && value.trim() !== "" ? value : "Not documented"}
+      </p>
     </div>
   )
 }

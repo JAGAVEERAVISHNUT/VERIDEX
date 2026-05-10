@@ -106,6 +106,19 @@ export function UploadDropzone({
                 : f,
             ),
           )
+        } else if (result.status === "error") {
+          // Server-side error
+          setFiles((prev) =>
+            prev.map((f) =>
+              f.id === id
+                ? {
+                    ...f,
+                    status: "error",
+                    error: result.message ?? "Analysis service error.",
+                  }
+                : f,
+            ),
+          )
         } else if (result.status === "valid" && result.case) {
           // Add the extracted case to the global store
           const extractedCase = result.case as AutopsyCase
@@ -132,14 +145,15 @@ export function UploadDropzone({
             ),
           )
         }
-      } catch {
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : "Unknown error"
         setFiles((prev) =>
           prev.map((f) =>
             f.id === id
               ? {
                   ...f,
                   status: "error",
-                  error: "Network error — could not reach analysis service.",
+                  error: `Network error: ${errorMsg}`,
                 }
               : f,
           ),

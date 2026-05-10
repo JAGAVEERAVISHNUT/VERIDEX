@@ -1,6 +1,12 @@
 import { generateText } from "ai"
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>
+
+// Dynamic import to avoid issues with pdf-parse initialization
+async function parsePDF(buffer: Buffer): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const pdfParse = require("pdf-parse")
+  const result = await pdfParse(buffer)
+  return result.text?.trim() ?? ""
+}
 
 // Comprehensive autopsy extraction prompt
 const SYSTEM_PROMPT = `You are a forensic pathology AI that extracts structured autopsy case data from medical examiner reports.
@@ -124,9 +130,11 @@ export async function POST(req: Request) {
 
     if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
       try {
-        const parsed = await pdfParse(buffer)
-        extractedText = parsed.text?.trim() ?? ""
-      } catch {
+        console.log("[v0] Parsing PDF, size:", file.size)
+        extractedText = await parsePDF(buffer)
+        console.log("[v0] PDF parsed, text length:", extractedText.length)
+      } catch (pdfErr) {
+        console.error("[v0] PDF parse error:", pdfErr)
         return Response.json({ status: "invalid", message: "Could not parse PDF" }, { status: 422 })
       }
     } else if (file.type === "text/plain" || file.name.endsWith(".txt") || file.name.endsWith(".md")) {
@@ -139,12 +147,22 @@ export async function POST(req: Request) {
       return Response.json({ status: "invalid", message: "Document too short or empty" })
     }
 
+    // Truncate text to avoid token limits and timeouts (max ~50k chars)
+    const maxChars = 50000
+    const truncatedText = extractedText.length > maxChars 
+      ? extractedText.slice(0, maxChars) + "\n\n[Document truncated for processing...]"
+      : extractedText
+
+    console.log("[v0] Calling AI with text length:", truncatedText.length)
+
     // Call AI to extract full autopsy case
     const { text } = await generateText({
       model: "openai/gpt-4o-mini",
       system: SYSTEM_PROMPT,
-      prompt: `Extract autopsy case data from this document:\n\n${extractedText}`,
+      prompt: `Extract autopsy case data from this document:\n\n${truncatedText}`,
     })
+
+    console.log("[v0] AI response received, length:", text.length)
 
     // Parse the JSON response
     let result: { status: string; case?: Record<string, unknown>; message?: string }
@@ -152,7 +170,9 @@ export async function POST(req: Request) {
       // Strip any markdown code fences if present
       const cleanText = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()
       result = JSON.parse(cleanText)
-    } catch {
+    } catch (parseErr) {
+      console.error("[v0] JSON parse error:", parseErr)
+      console.error("[v0] Raw AI response:", text.slice(0, 500))
       return Response.json({ status: "invalid", message: "AI response was not valid JSON" })
     }
 
@@ -163,7 +183,14 @@ export async function POST(req: Request) {
     // Return the full case object
     return Response.json({ status: "valid", case: result.case })
   } catch (err) {
-    console.error("[analyze] error:", err instanceof Error ? err.message : String(err))
-    return Response.json({ status: "invalid", message: "Analysis failed" }, { status: 500 })
+    const errorMessage = err instanceof Error ? err.message : String(err)
+    console.error("[v0] Analyze API error:", errorMessage)
+    console.error("[v0] Full error:", err)
+    
+    // Return more specific error message
+    return Response.json({ 
+      status: "error", 
+      message: `Analysis failed: ${errorMessage}` 
+    }, { status: 500 })
   }
 }

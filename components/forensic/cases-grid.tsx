@@ -22,7 +22,7 @@ const statusStyles: Record<AutopsyCase["status"], string> = {
 }
 
 export function CasesGrid() {
-  const cases: AutopsyCase[] = useCasesStore((s) => s.getAllCases())
+  const cases = useCasesStore((s) => s.cases)
 
   return (
     <div className="space-y-6">

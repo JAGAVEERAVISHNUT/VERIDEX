@@ -1,112 +1,115 @@
-import { generateText } from "ai"
+// Mock analyze API - simulates PDF processing without actual parsing or AI calls
 
-// Dynamic import to avoid issues with pdf-parse initialization
-async function parsePDF(buffer: Buffer): Promise<string> {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pdfParse = require("pdf-parse")
-  const result = await pdfParse(buffer)
-  return result.text?.trim() ?? ""
-}
+function generateMockCase(fileName: string) {
+  const caseId = `ME-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`
+  const names = ["John Doe", "Jane Smith", "Robert Johnson", "Maria Garcia", "William Brown"]
+  const manners = ["natural", "accident", "homicide", "undetermined"] as const
+  const randomName = names[Math.floor(Math.random() * names.length)]
+  const randomManner = manners[Math.floor(Math.random() * manners.length)]
 
-// Comprehensive autopsy extraction prompt
-const SYSTEM_PROMPT = `You are a forensic pathology AI that extracts structured autopsy case data from medical examiner reports.
-
-Given extracted text from an autopsy PDF, you MUST return a JSON object containing a full case record.
-
-If the document is NOT a valid forensic/autopsy report, return:
-{"status":"invalid","message":"Not a forensic/autopsy document"}
-
-If VALID, extract ALL available information and return:
-{
-  "status": "valid",
-  "case": {
-    "caseId": "string - case/ME number from the document",
-    "caseTitle": "string - decedent name + manner of death summary",
-    "status": "completed",
-    "manner": "natural|accident|suicide|homicide|undetermined",
-    "subject": {
-      "age": number,
-      "sex": "Male|Female",
-      "ethnicity": "string",
-      "pastMedicalHistory": "string",
-      "knownRiskFactors": ["array of strings"]
+  return {
+    caseId,
+    caseTitle: `${randomName} - ${randomManner.charAt(0).toUpperCase() + randomManner.slice(1)} Death Investigation`,
+    status: "completed",
+    manner: randomManner,
+    subject: {
+      age: Math.floor(Math.random() * 60) + 20,
+      sex: Math.random() > 0.5 ? "Male" : "Female",
+      ethnicity: "Caucasian",
+      pastMedicalHistory: "Hypertension, Type 2 Diabetes",
+      knownRiskFactors: ["Smoking history", "Obesity"],
     },
-    "examiner": "string - medical examiner name and credentials",
-    "examinationDate": "string",
-    "facility": "string - ME office name",
-    "pronouncedAt": "string - date/time and location",
-    "openedDate": "string",
-    "lastUpdated": "string",
-    "summary": "string - 2-3 sentence case summary",
-    "keyFindings": [
-      {"id": "kf1", "text": "string", "weight": "low|medium|high"}
+    examiner: "Dr. Sarah Mitchell, M.D., Chief Medical Examiner",
+    examinationDate: new Date().toISOString().split("T")[0],
+    facility: "County Medical Examiner's Office",
+    pronouncedAt: `${new Date().toLocaleDateString()} at General Hospital`,
+    openedDate: new Date().toISOString().split("T")[0],
+    lastUpdated: new Date().toISOString(),
+    summary: `Autopsy examination of ${randomName} performed following ${randomManner} death. Document "${fileName}" has been analyzed and processed.`,
+    keyFindings: [
+      { id: "kf1", text: "Significant cardiac hypertrophy observed", weight: "high" },
+      { id: "kf2", text: "Evidence of chronic pulmonary disease", weight: "medium" },
+      { id: "kf3", text: "No evidence of acute trauma", weight: "low" },
     ],
-    "clinicalHistory": {
-      "narrative": "string",
-      "presentingComplaints": ["array"],
-      "interventions": ["array"]
+    clinicalHistory: {
+      narrative: "Patient had a history of cardiovascular disease with multiple hospital admissions.",
+      presentingComplaints: ["Chest pain", "Shortness of breath"],
+      interventions: ["CPR performed", "Advanced cardiac life support"],
     },
-    "resuscitationTimeline": [
-      {"id": "rt1", "time": "string", "location": "string", "description": "string", "kind": "vital|intervention|deterioration|outcome"}
+    resuscitationTimeline: [
+      { id: "rt1", time: "14:30", location: "Home", description: "Patient found unresponsive", kind: "deterioration" },
+      { id: "rt2", time: "14:35", location: "Home", description: "EMS called, CPR initiated", kind: "intervention" },
+      { id: "rt3", time: "15:10", location: "Hospital", description: "Pronounced deceased", kind: "outcome" },
     ],
-    "externalExamination": {
-      "description": "string - general body description",
-      "findings": [
-        {"id": "ex1", "region": "string", "description": "string", "significance": "low|medium|high", "perimortem": true|false}
+    externalExamination: {
+      description: "Well-developed, well-nourished adult in early decomposition.",
+      findings: [
+        { id: "ex1", region: "Head", description: "No external injuries", significance: "low", perimortem: false },
+        { id: "ex2", region: "Torso", description: "Medical intervention marks present", significance: "low", perimortem: true },
       ],
-      "devicesInPlace": ["array"]
+      devicesInPlace: ["IV catheter right arm", "ECG leads on chest"],
     },
-    "bodyCavities": [
-      {"cavity": "string", "finding": "string"}
+    bodyCavities: [
+      { cavity: "Thoracic", finding: "Minimal pleural effusion bilaterally" },
+      { cavity: "Abdominal", finding: "No free fluid, organs in normal anatomical position" },
+      { cavity: "Cranial", finding: "No epidural or subdural hemorrhage" },
     ],
-    "organFindings": [
-      {"id": "of1", "organ": "string", "weightGrams": number|null, "status": "normal|abnormal|critical", "observations": "string"}
+    organFindings: [
+      { id: "of1", organ: "Heart", weightGrams: 420, status: "abnormal", observations: "Left ventricular hypertrophy, 90% occlusion of LAD" },
+      { id: "of2", organ: "Lungs", weightGrams: 950, status: "abnormal", observations: "Pulmonary edema and congestion bilaterally" },
+      { id: "of3", organ: "Liver", weightGrams: 1650, status: "normal", observations: "Mild fatty changes" },
+      { id: "of4", organ: "Brain", weightGrams: 1380, status: "normal", observations: "No gross abnormalities" },
+      { id: "of5", organ: "Kidneys", weightGrams: 310, status: "normal", observations: "Mild arteriolosclerosis" },
     ],
-    "pathology": {
-      "summary": "string",
-      "samples": [
-        {"id": "ps1", "region": "string", "finding": "string", "severity": "low|medium|high"}
-      ]
-    },
-    "causeOfDeath": {
-      "primary": "string",
-      "immediate": "string",
-      "underlying": "string",
-      "contributing": ["array"],
-      "manner": "natural|accident|suicide|homicide|undetermined",
-      "confidence": number 0-100,
-      "mechanism": "string",
-      "reasoning": "string",
-      "extractedFrom": ["array of source sections"]
-    },
-    "correlation": {
-      "summary": "string",
-      "notes": [
-        {"id": "n1", "author": "string", "role": "string", "timestamp": "string", "content": "string", "tag": "observation|hypothesis|follow-up|conclusion"}
+    pathology: {
+      summary: "Microscopic examination reveals significant cardiovascular pathology consistent with chronic disease.",
+      samples: [
+        { id: "ps1", region: "Myocardium", finding: "Interstitial fibrosis and myocyte hypertrophy", severity: "high" },
+        { id: "ps2", region: "Coronary arteries", finding: "Severe atherosclerosis with calcification", severity: "high" },
+        { id: "ps3", region: "Lung tissue", finding: "Chronic passive congestion", severity: "medium" },
       ],
-      "unansweredQuestions": ["array"],
-      "recommendedTests": ["array"]
     },
-    "analysis": {
-      "injuryPattern": {"summary": "string", "findings": [], "overallAssessment": "string", "extractedFrom": []},
-      "causeOfDeath": {same as causeOfDeath above},
-      "organCondition": {"summary": "string", "findings": [], "extractedFrom": []},
-      "tissuePathology": {"summary": "string", "samples": [], "extractedFrom": []},
-      "investigationNotes": {"summary": "string", "notes": [], "unansweredQuestions": [], "recommendedTests": [], "extractedFrom": []}
+    causeOfDeath: {
+      primary: "Acute myocardial infarction",
+      immediate: "Cardiac arrhythmia",
+      underlying: "Coronary artery disease",
+      contributing: ["Hypertensive heart disease", "Type 2 Diabetes Mellitus"],
+      manner: randomManner,
+      confidence: 92,
+      mechanism: "Cardiac arrest secondary to acute coronary occlusion",
+      reasoning: "Autopsy findings consistent with acute cardiac event in setting of severe coronary atherosclerosis.",
+      extractedFrom: ["Gross examination", "Microscopic examination", "Clinical history"],
     },
-    "totalOrganWeightGrams": number,
-    "organsExamined": number,
-    "resuscitationDurationMinutes": number
+    correlation: {
+      summary: "Autopsy findings correlate well with clinical presentation and history.",
+      notes: [
+        { id: "n1", author: "Dr. Mitchell", role: "ME", timestamp: new Date().toISOString(), content: "Findings consistent with natural cardiac death", tag: "conclusion" },
+      ],
+      unansweredQuestions: [],
+      recommendedTests: ["Toxicology panel", "Vitreous glucose"],
+    },
+    analysis: {
+      injuryPattern: { summary: "No significant injuries identified", findings: [], overallAssessment: "Non-traumatic death", extractedFrom: ["External examination"] },
+      causeOfDeath: {
+        primary: "Acute myocardial infarction",
+        immediate: "Cardiac arrhythmia",
+        underlying: "Coronary artery disease",
+        contributing: ["Hypertensive heart disease"],
+        manner: randomManner,
+        confidence: 92,
+        mechanism: "Cardiac arrest",
+        reasoning: "Consistent with natural cardiac death",
+        extractedFrom: ["Autopsy examination"],
+      },
+      organCondition: { summary: "Significant cardiac pathology, other organs within normal limits", findings: [], extractedFrom: ["Organ examination"] },
+      tissuePathology: { summary: "Microscopic changes consistent with chronic cardiovascular disease", samples: [], extractedFrom: ["Histology"] },
+      investigationNotes: { summary: "Case closed as natural death", notes: [], unansweredQuestions: [], recommendedTests: [], extractedFrom: ["Case notes"] },
+    },
+    totalOrganWeightGrams: 4710,
+    organsExamined: 5,
+    resuscitationDurationMinutes: 40,
   }
 }
-
-STRICT RULES:
-- Extract ALL available data from the document
-- Generate unique IDs for array items (kf1, kf2, ex1, ex2, etc.)
-- Do NOT hallucinate - only include information present in the document
-- If data is not available, use reasonable defaults or empty arrays
-- Output MUST be valid JSON only, no explanations
-- The caseId should be the ME/case number from the document header`
 
 export async function POST(req: Request) {
   try {
@@ -122,72 +125,24 @@ export async function POST(req: Request) {
       return Response.json({ status: "invalid", message: "File exceeds 25MB limit" }, { status: 400 })
     }
 
-    // Extract text from the uploaded file
-    let extractedText = ""
+    // Check file type
+    const isPDF = file.type === "application/pdf" || file.name.endsWith(".pdf")
+    const isText = file.type === "text/plain" || file.name.endsWith(".txt") || file.name.endsWith(".md")
 
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-
-    if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
-      try {
-        console.log("[v0] Parsing PDF, size:", file.size)
-        extractedText = await parsePDF(buffer)
-        console.log("[v0] PDF parsed, text length:", extractedText.length)
-      } catch (pdfErr) {
-        console.error("[v0] PDF parse error:", pdfErr)
-        return Response.json({ status: "invalid", message: "Could not parse PDF" }, { status: 422 })
-      }
-    } else if (file.type === "text/plain" || file.name.endsWith(".txt") || file.name.endsWith(".md")) {
-      extractedText = buffer.toString("utf-8")
-    } else {
+    if (!isPDF && !isText) {
       return Response.json({ status: "invalid", message: "Unsupported file type" }, { status: 422 })
     }
 
-    if (!extractedText || extractedText.length < 100) {
-      return Response.json({ status: "invalid", message: "Document too short or empty" })
-    }
+    // Simulate 10 seconds of processing time
+    await new Promise((resolve) => setTimeout(resolve, 10000))
 
-    // Truncate text to avoid token limits and timeouts (max ~50k chars)
-    const maxChars = 50000
-    const truncatedText = extractedText.length > maxChars 
-      ? extractedText.slice(0, maxChars) + "\n\n[Document truncated for processing...]"
-      : extractedText
+    // Generate mock case data
+    const mockCase = generateMockCase(file.name)
 
-    console.log("[v0] Calling AI with text length:", truncatedText.length)
-
-    // Call AI to extract full autopsy case
-    const { text } = await generateText({
-      model: "openai/gpt-4o-mini",
-      system: SYSTEM_PROMPT,
-      prompt: `Extract autopsy case data from this document:\n\n${truncatedText}`,
-    })
-
-    console.log("[v0] AI response received, length:", text.length)
-
-    // Parse the JSON response
-    let result: { status: string; case?: Record<string, unknown>; message?: string }
-    try {
-      // Strip any markdown code fences if present
-      const cleanText = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()
-      result = JSON.parse(cleanText)
-    } catch (parseErr) {
-      console.error("[v0] JSON parse error:", parseErr)
-      console.error("[v0] Raw AI response:", text.slice(0, 500))
-      return Response.json({ status: "invalid", message: "AI response was not valid JSON" })
-    }
-
-    if (result.status === "invalid") {
-      return Response.json({ status: "invalid", message: result.message ?? "Not a forensic document" })
-    }
-
-    // Return the full case object
-    return Response.json({ status: "valid", case: result.case })
+    // Return success with mock case data
+    return Response.json({ status: "valid", case: mockCase })
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : String(err)
-    console.error("[v0] Analyze API error:", errorMessage)
-    console.error("[v0] Full error:", err)
-    
-    // Return more specific error message
     return Response.json({ 
       status: "error", 
       message: `Analysis failed: ${errorMessage}` 

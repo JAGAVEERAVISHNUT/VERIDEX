@@ -1,6 +1,6 @@
 "use client"
 
-import { create } from "zustand"
+import { create } from "zustand" // Zustand state management
 import { caseList, type AutopsyCase } from "@/lib/mock-data"
 
 interface CasesStore {

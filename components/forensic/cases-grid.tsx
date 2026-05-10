@@ -1,8 +1,11 @@
+"use client"
+
 import Link from "next/link"
 import { Activity, ArrowUpRight, Building2, ClipboardCheck, Stethoscope, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { caseList, type AutopsyCase, type DeathManner } from "@/lib/mock-data"
+import { useCasesStore } from "@/lib/cases-store"
+import type { AutopsyCase, DeathManner } from "@/lib/mock-data"
 
 const mannerStyles: Record<DeathManner, string> = {
   natural: "bg-[--color-severity-low]/15 text-[--color-severity-medium] ring-[--color-severity-low]/40",
@@ -19,7 +22,7 @@ const statusStyles: Record<AutopsyCase["status"], string> = {
 }
 
 export function CasesGrid() {
-  const cases: AutopsyCase[] = caseList
+  const cases: AutopsyCase[] = useCasesStore((s) => s.getAllCases())
 
   return (
     <div className="space-y-6">

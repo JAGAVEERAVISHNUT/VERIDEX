@@ -1,76 +1,106 @@
 import { generateText } from "ai"
-import { z } from "zod"
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>
 
-// Exact system prompt from the uploaded forensic AI specification document
-const SYSTEM_PROMPT = `You are a forensic investigation AI system and postmortem assistance system.
+// Comprehensive autopsy extraction prompt
+const SYSTEM_PROMPT = `You are a forensic pathology AI that extracts structured autopsy case data from medical examiner reports.
 
-The input is text extracted from:
-- a PDF using pdfplumber (for digital text-based reports), OR
-- OCR (Optical Character Recognition) for scanned PDFs/images.
+Given extracted text from an autopsy PDF, you MUST return a JSON object containing a full case record.
 
-Note:
-OCR text may contain noise, spelling errors, or broken formatting. You must interpret carefully but do NOT guess missing facts.
+If the document is NOT a valid forensic/autopsy report, return:
+{"status":"invalid","message":"Not a forensic/autopsy document"}
 
-Your job is to:
-
-1. Validate the Report:
-- Check if the text contains real forensic indicators such as:
-  - Body temperature
-  - Rigor mortis
-  - Livor mortis
-  - Environmental conditions
-- If these are missing, unclear, or corrupted beyond recognition → mark the report as INVALID
-
-2. If the report is VALID:
-
-A. Extract Structured Data:
-- body_temperature
-- rigor_mortis
-- livor_mortis
-- environment
-- any timestamps or observations (if clearly present)
-
-B. Time-of-Death Insight:
-- Estimate approximate time since death based ONLY on clearly available factors
-- If insufficient data → return "insufficient data"
-
-C. Summary:
-- Provide a short forensic explanation based ONLY on extracted facts
-
-3. If the report is INVALID:
-Return ONLY:
-{"status":"invalid","message":"Uploaded file does not contain valid forensic/autopsy data"}
-
-4. If VALID, return ONLY JSON:
-{"status":"valid","source_type":"pdfplumber_or_ocr","structured_data":{"body_temperature":"","rigor_mortis":"","livor_mortis":"","environment":""},"time_of_death_estimate":"","summary":""}
+If VALID, extract ALL available information and return:
+{
+  "status": "valid",
+  "case": {
+    "caseId": "string - case/ME number from the document",
+    "caseTitle": "string - decedent name + manner of death summary",
+    "status": "completed",
+    "manner": "natural|accident|suicide|homicide|undetermined",
+    "subject": {
+      "age": number,
+      "sex": "Male|Female",
+      "ethnicity": "string",
+      "pastMedicalHistory": "string",
+      "knownRiskFactors": ["array of strings"]
+    },
+    "examiner": "string - medical examiner name and credentials",
+    "examinationDate": "string",
+    "facility": "string - ME office name",
+    "pronouncedAt": "string - date/time and location",
+    "openedDate": "string",
+    "lastUpdated": "string",
+    "summary": "string - 2-3 sentence case summary",
+    "keyFindings": [
+      {"id": "kf1", "text": "string", "weight": "low|medium|high"}
+    ],
+    "clinicalHistory": {
+      "narrative": "string",
+      "presentingComplaints": ["array"],
+      "interventions": ["array"]
+    },
+    "resuscitationTimeline": [
+      {"id": "rt1", "time": "string", "location": "string", "description": "string", "kind": "vital|intervention|deterioration|outcome"}
+    ],
+    "externalExamination": {
+      "description": "string - general body description",
+      "findings": [
+        {"id": "ex1", "region": "string", "description": "string", "significance": "low|medium|high", "perimortem": true|false}
+      ],
+      "devicesInPlace": ["array"]
+    },
+    "bodyCavities": [
+      {"cavity": "string", "finding": "string"}
+    ],
+    "organFindings": [
+      {"id": "of1", "organ": "string", "weightGrams": number|null, "status": "normal|abnormal|critical", "observations": "string"}
+    ],
+    "pathology": {
+      "summary": "string",
+      "samples": [
+        {"id": "ps1", "region": "string", "finding": "string", "severity": "low|medium|high"}
+      ]
+    },
+    "causeOfDeath": {
+      "primary": "string",
+      "immediate": "string",
+      "underlying": "string",
+      "contributing": ["array"],
+      "manner": "natural|accident|suicide|homicide|undetermined",
+      "confidence": number 0-100,
+      "mechanism": "string",
+      "reasoning": "string",
+      "extractedFrom": ["array of source sections"]
+    },
+    "correlation": {
+      "summary": "string",
+      "notes": [
+        {"id": "n1", "author": "string", "role": "string", "timestamp": "string", "content": "string", "tag": "observation|hypothesis|follow-up|conclusion"}
+      ],
+      "unansweredQuestions": ["array"],
+      "recommendedTests": ["array"]
+    },
+    "analysis": {
+      "injuryPattern": {"summary": "string", "findings": [], "overallAssessment": "string", "extractedFrom": []},
+      "causeOfDeath": {same as causeOfDeath above},
+      "organCondition": {"summary": "string", "findings": [], "extractedFrom": []},
+      "tissuePathology": {"summary": "string", "samples": [], "extractedFrom": []},
+      "investigationNotes": {"summary": "string", "notes": [], "unansweredQuestions": [], "recommendedTests": [], "extractedFrom": []}
+    },
+    "totalOrganWeightGrams": number,
+    "organsExamined": number,
+    "resuscitationDurationMinutes": number
+  }
+}
 
 STRICT RULES:
-- Do NOT guess missing values
-- Do NOT hallucinate
-- Handle OCR noise carefully (e.g., minor spelling errors)
-- If uncertain → mark as invalid or "insufficient data"
-- Output must be valid JSON only
-- Do NOT include any explanation outside JSON`
-
-const validSchema = z.object({
-  status: z.enum(["valid"]),
-  source_type: z.string(),
-  structured_data: z.object({
-    body_temperature: z.string(),
-    rigor_mortis: z.string(),
-    livor_mortis: z.string(),
-    environment: z.string(),
-  }),
-  time_of_death_estimate: z.string(),
-  summary: z.string(),
-})
-
-const invalidSchema = z.object({
-  status: z.enum(["invalid"]),
-  message: z.string(),
-})
+- Extract ALL available data from the document
+- Generate unique IDs for array items (kf1, kf2, ex1, ex2, etc.)
+- Do NOT hallucinate - only include information present in the document
+- If data is not available, use reasonable defaults or empty arrays
+- Output MUST be valid JSON only, no explanations
+- The caseId should be the ME/case number from the document header`
 
 export async function POST(req: Request) {
   try {
@@ -78,17 +108,16 @@ export async function POST(req: Request) {
     const file = formData.get("file") as File | null
 
     if (!file) {
-      return Response.json({ error: "No file provided" }, { status: 400 })
+      return Response.json({ status: "invalid", message: "No file provided" }, { status: 400 })
     }
 
     const maxBytes = 25 * 1024 * 1024
     if (file.size > maxBytes) {
-      return Response.json({ error: "File exceeds 25MB limit" }, { status: 400 })
+      return Response.json({ status: "invalid", message: "File exceeds 25MB limit" }, { status: 400 })
     }
 
     // Extract text from the uploaded file
     let extractedText = ""
-    let sourceType = "pdfplumber"
 
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
@@ -97,76 +126,44 @@ export async function POST(req: Request) {
       try {
         const parsed = await pdfParse(buffer)
         extractedText = parsed.text?.trim() ?? ""
-        sourceType = "pdfplumber"
       } catch {
-        return Response.json(
-          {
-            status: "invalid",
-            message: "Uploaded file does not contain valid forensic/autopsy data",
-          },
-          { status: 422 },
-        )
+        return Response.json({ status: "invalid", message: "Could not parse PDF" }, { status: 422 })
       }
-    } else if (
-      file.type === "text/plain" ||
-      file.name.endsWith(".txt") ||
-      file.name.endsWith(".md")
-    ) {
+    } else if (file.type === "text/plain" || file.name.endsWith(".txt") || file.name.endsWith(".md")) {
       extractedText = buffer.toString("utf-8")
-      sourceType = "ocr"
     } else {
-      return Response.json(
-        {
-          status: "invalid",
-          message: "Uploaded file does not contain valid forensic/autopsy data",
-        },
-        { status: 422 },
-      )
+      return Response.json({ status: "invalid", message: "Unsupported file type" }, { status: 422 })
     }
 
-    if (!extractedText || extractedText.length < 50) {
-      return Response.json({
-        status: "invalid",
-        message: "Uploaded file does not contain valid forensic/autopsy data",
-      })
+    if (!extractedText || extractedText.length < 100) {
+      return Response.json({ status: "invalid", message: "Document too short or empty" })
     }
 
-    // Inject extracted text into the prompt exactly as specified
-    const userPrompt = `Extracted Text:\n${extractedText}`
-
-    // Call AI with Output.object() for structured extraction
+    // Call AI to extract full autopsy case
     const { text } = await generateText({
       model: "openai/gpt-4o-mini",
       system: SYSTEM_PROMPT,
-      prompt: userPrompt,
+      prompt: `Extract autopsy case data from this document:\n\n${extractedText}`,
     })
 
-    // Parse the JSON response from the AI
-    let parsedResult: { status: "valid" | "invalid"; [key: string]: unknown }
+    // Parse the JSON response
+    let result: { status: string; case?: Record<string, unknown>; message?: string }
     try {
-      parsedResult = JSON.parse(text)
+      // Strip any markdown code fences if present
+      const cleanText = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()
+      result = JSON.parse(cleanText)
     } catch {
-      return Response.json({
-        status: "invalid",
-        message: "Uploaded file does not contain valid forensic/autopsy data",
-      })
+      return Response.json({ status: "invalid", message: "AI response was not valid JSON" })
     }
 
-    // Ensure source_type is set for valid responses
-    const output =
-      parsedResult.status === "valid"
-        ? { ...parsedResult, source_type: sourceType }
-        : parsedResult
+    if (result.status === "invalid") {
+      return Response.json({ status: "invalid", message: result.message ?? "Not a forensic document" })
+    }
 
-    return Response.json(output)
+    // Return the full case object
+    return Response.json({ status: "valid", case: result.case })
   } catch (err) {
     console.error("[analyze] error:", err instanceof Error ? err.message : String(err))
-    return Response.json(
-      {
-        status: "invalid",
-        message: "Uploaded file does not contain valid forensic/autopsy data",
-      },
-      { status: 500 },
-    )
+    return Response.json({ status: "invalid", message: "Analysis failed" }, { status: 500 })
   }
 }

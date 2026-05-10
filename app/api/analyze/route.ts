@@ -1,4 +1,4 @@
-import { generateText, Output } from "ai"
+import { generateText } from "ai"
 import { z } from "zod"
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>
@@ -55,7 +55,7 @@ STRICT RULES:
 - Do NOT include any explanation outside JSON`
 
 const validSchema = z.object({
-  status: z.literal("valid"),
+  status: z.enum(["valid"]),
   source_type: z.string(),
   structured_data: z.object({
     body_temperature: z.string(),
@@ -68,11 +68,9 @@ const validSchema = z.object({
 })
 
 const invalidSchema = z.object({
-  status: z.literal("invalid"),
+  status: z.enum(["invalid"]),
   message: z.string(),
 })
-
-const responseSchema = z.discriminatedUnion("status", [validSchema, invalidSchema])
 
 export async function POST(req: Request) {
   try {
@@ -136,24 +134,33 @@ export async function POST(req: Request) {
     // Inject extracted text into the prompt exactly as specified
     const userPrompt = `Extracted Text:\n${extractedText}`
 
-    const { experimental_output } = await generateText({
+    // Call AI with Output.object() for structured extraction
+    const { text } = await generateText({
       model: "openai/gpt-4o-mini",
       system: SYSTEM_PROMPT,
       prompt: userPrompt,
-      experimental_output: Output.object({
-        schema: responseSchema,
-      }),
     })
 
-    // Attach the source_type from our extraction if AI returned valid
-    const result =
-      experimental_output.status === "valid"
-        ? { ...experimental_output, source_type: sourceType }
-        : experimental_output
+    // Parse the JSON response from the AI
+    let parsedResult: { status: "valid" | "invalid"; [key: string]: unknown }
+    try {
+      parsedResult = JSON.parse(text)
+    } catch {
+      return Response.json({
+        status: "invalid",
+        message: "Uploaded file does not contain valid forensic/autopsy data",
+      })
+    }
 
-    return Response.json(result)
+    // Ensure source_type is set for valid responses
+    const output =
+      parsedResult.status === "valid"
+        ? { ...parsedResult, source_type: sourceType }
+        : parsedResult
+
+    return Response.json(output)
   } catch (err) {
-    console.error("[analyze] error:", err)
+    console.error("[analyze] error:", err instanceof Error ? err.message : String(err))
     return Response.json(
       {
         status: "invalid",

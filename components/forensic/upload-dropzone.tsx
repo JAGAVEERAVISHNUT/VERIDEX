@@ -108,6 +108,8 @@ export function UploadDropzone({
 
       const result: AnalysisResult = await res.json()
 
+      console.log("[v0] analyze response:", { status: res.status, result })
+
       if (result.status === "invalid") {
         setFiles((prev) =>
           prev.map((f) =>
@@ -130,7 +132,8 @@ export function UploadDropzone({
           ),
         )
       }
-    } catch {
+    } catch (err) {
+      console.error("[v0] fetch error:", err instanceof Error ? err.message : String(err))
       setFiles((prev) =>
         prev.map((f) =>
           f.id === id

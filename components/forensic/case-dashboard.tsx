@@ -9,6 +9,7 @@ import { DataExplorer } from "@/components/forensic/data-explorer"
 import { MapCard } from "@/components/forensic/map-card"
 import { StatsStrip } from "@/components/forensic/stats-strip"
 import { AutopsyAnalysis } from "@/components/forensic/autopsy-analysis"
+import { CorrelationEngine } from "@/components/forensic/correlation-engine"
 import type { ForensicCase } from "@/lib/mock-data"
 
 export function CaseDashboard({ data }: { data: ForensicCase }) {
@@ -26,6 +27,8 @@ export function CaseDashboard({ data }: { data: ForensicCase }) {
             <RiskAnalysis data={data} />
           </div>
         </div>
+
+        <CorrelationEngine data={data} />
 
         <AutopsyAnalysis data={data} />
 

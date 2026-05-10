@@ -3,93 +3,70 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Veridex Clinical Theme
+/* Veridex — Dark Intelligence Theme
    Palette:
-   - Primary:           #1E3A5F  deep navy
-   - Secondary:         #3A6EA5  muted blue
-   - Background:        #FFFFFF  white
-   - Light background:  #F5F7FA
-   - Text:              #1F2937  dark gray
-   - Accent:            #94A3B8  soft gray-blue
+   - Background:        #0a0f1e  deep dark navy
+   - Surface:           #0d1426  card / panel surface
+   - Border:            #1a2640  subtle border
+   - Primary:           #3a8fe8  electric blue
+   - Secondary:         #1e3a5f  muted navy
+   - Text:              #e2e8f0  near-white
+   - Muted text:        #64748b  slate muted
+   - Accent:            #38bdf8  sky accent
+   - Severity high:     #ef4444  red
+   - Severity medium:   #f59e0b  amber
+   - Severity low:      #22c55e  green
 */
 
 :root {
-  --background: #ffffff;
-  --foreground: #1f2937;
+  --background: #0a0f1e;
+  --foreground: #e2e8f0;
 
-  --card: #ffffff;
-  --card-foreground: #1f2937;
+  --card: #0d1426;
+  --card-foreground: #e2e8f0;
 
-  --popover: #ffffff;
-  --popover-foreground: #1f2937;
+  --popover: #0d1426;
+  --popover-foreground: #e2e8f0;
 
-  --primary: #1e3a5f;
+  --primary: #3a8fe8;
   --primary-foreground: #ffffff;
 
-  --secondary: #f5f7fa;
-  --secondary-foreground: #1f2937;
+  --secondary: #111827;
+  --secondary-foreground: #94a3b8;
 
-  --muted: #f5f7fa;
+  --muted: #111827;
   --muted-foreground: #64748b;
 
-  --accent: #94a3b8;
-  --accent-foreground: #1f2937;
+  --accent: #38bdf8;
+  --accent-foreground: #0a0f1e;
 
-  --destructive: #1e3a5f;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
 
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #1e3a5f;
+  --border: #1a2640;
+  --input: #1a2640;
+  --ring: #3a8fe8;
 
-  /* Severity tokens — kept inside the navy/blue/gray palette
-     low (normal)    -> accent gray-blue
-     medium (note)   -> secondary muted blue
-     high (critical) -> primary navy
-  */
-  --severity-low: #94a3b8;
-  --severity-medium: #3a6ea5;
-  --severity-high: #1e3a5f;
+  --severity-low:    #22c55e;
+  --severity-medium: #f59e0b;
+  --severity-high:   #ef4444;
 
-  /* Charts in tonal navy/blue/gray progression */
-  --chart-1: #1e3a5f;
-  --chart-2: #3a6ea5;
-  --chart-3: #6b8dba;
-  --chart-4: #94a3b8;
-  --chart-5: #c7d2dd;
+  --chart-1: #3a8fe8;
+  --chart-2: #38bdf8;
+  --chart-3: #818cf8;
+  --chart-4: #a78bfa;
+  --chart-5: #22c55e;
 
   --radius: 0.5rem;
 
-  --sidebar: #ffffff;
-  --sidebar-foreground: #1f2937;
-  --sidebar-primary: #1e3a5f;
+  --sidebar: #0d1426;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-primary: #3a8fe8;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f5f7fa;
-  --sidebar-accent-foreground: #1f2937;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: #1e3a5f;
-}
-
-.dark {
-  --background: #ffffff;
-  --foreground: #1f2937;
-  --card: #ffffff;
-  --card-foreground: #1f2937;
-  --popover: #ffffff;
-  --popover-foreground: #1f2937;
-  --primary: #1e3a5f;
-  --primary-foreground: #ffffff;
-  --secondary: #f5f7fa;
-  --secondary-foreground: #1f2937;
-  --muted: #f5f7fa;
-  --muted-foreground: #64748b;
-  --accent: #94a3b8;
-  --accent-foreground: #1f2937;
-  --destructive: #1e3a5f;
-  --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #1e3a5f;
+  --sidebar-accent: #111827;
+  --sidebar-accent-foreground: #e2e8f0;
+  --sidebar-border: #1a2640;
+  --sidebar-ring: #3a8fe8;
 }
 
 @theme inline {
@@ -116,9 +93,9 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --color-severity-low: var(--severity-low);
+  --color-severity-low:    var(--severity-low);
   --color-severity-medium: var(--severity-medium);
-  --color-severity-high: var(--severity-high);
+  --color-severity-high:   var(--severity-high);
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -151,10 +128,16 @@
   }
 }
 
-/* Subtle clinical grid backdrop for the page background */
-.bg-grid {
-  background-image:
-    linear-gradient(to right, #1e3a5f0a 1px, transparent 1px),
-    linear-gradient(to bottom, #1e3a5f0a 1px, transparent 1px);
-  background-size: 40px 40px;
+/* Particle canvas sits behind everything */
+#tsparticles {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* All page content sits above the particle layer */
+.page-layer {
+  position: relative;
+  z-index: 1;
 }

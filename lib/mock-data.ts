@@ -712,9 +712,555 @@ export const autopsyCase: AutopsyCase = {
   resuscitationDurationMinutes: 65, // 15:00 arrival → 16:05 pronounced
 }
 
-export const caseList = [autopsyCase]
+// ---------------------------------------------------------------------------
+// Second case — William Debose (ME# 2020-1949)
+// City and County of Denver, Office of the Medical Examiner
+// Examiner: Meredith A. Frank, M.D. / Signed: James L. Caruso, M.D.
+// All data strictly from the attached autopsy report.
+// ---------------------------------------------------------------------------
+
+const deboseSubject: Subject = {
+  age: 21,
+  sex: "Male",
+  ethnicity: "Not specified in report",
+  pastMedicalHistory: "No evidence of significant natural disease processes",
+  knownRiskFactors: [],
+}
+
+const deboseExternalFindings: ExternalFinding[] = [
+  {
+    id: "dex1",
+    region: "Right upper chest",
+    description:
+      "Entrance gunshot wound — 3/16-inch skin defect with 3/16-inch eccentric marginal abrasion between 7 and 11 o'clock. Located approximately 13¾ inches below top of head and 2¼ inches right of anterior midline. No soot deposition or gunpowder stippling.",
+    significance: "high",
+    perimortem: true,
+  },
+  {
+    id: "dex2",
+    region: "Left upper back",
+    description:
+      "Exit wound — ½-inch irregular laceration, approximately 15¼ inches below top of head and 3³⁄₁₆ inches left of posterior midline. No projectile or fragments recovered.",
+    significance: "high",
+    perimortem: true,
+  },
+  {
+    id: "dex3",
+    region: "Lateral left thigh",
+    description:
+      "Entrance gunshot wound — 3/16-inch skin defect with 3/16-inch eccentric marginal abrasion between 5 and 7 o'clock. Located approximately 35½ inches above bottom of left foot. No soot deposition or gunpowder stippling.",
+    significance: "high",
+    perimortem: true,
+  },
+  {
+    id: "dex4",
+    region: "Face — bridge and left side of nose",
+    description: "1¼ × ¾-inch irregular abrasion on bridge of nose and left side of nose.",
+    significance: "low",
+    perimortem: true,
+  },
+  {
+    id: "dex5",
+    region: "Forehead — mid and left",
+    description: "3½ × 1½-inch irregular abrasion.",
+    significance: "low",
+    perimortem: true,
+  },
+  {
+    id: "dex6",
+    region: "Left side of face",
+    description: "1¾ × ½-inch abrasion.",
+    significance: "low",
+    perimortem: true,
+  },
+  {
+    id: "dex7",
+    region: "Right knee",
+    description: "¾ × ½-inch abrasion.",
+    significance: "low",
+    perimortem: true,
+  },
+  {
+    id: "dex8",
+    region: "Left knee",
+    description: "½ × ½-inch abrasion.",
+    significance: "low",
+    perimortem: true,
+  },
+  {
+    id: "dex9",
+    region: "Left wrist",
+    description: "Few small abrasions with postmortem appearance.",
+    significance: "low",
+    perimortem: false,
+  },
+]
+
+const deboseBodyCavities: BodyCavity[] = [
+  {
+    cavity: "Right pleural cavity",
+    finding: "Approximately 1000 mL of blood — associated with chest gunshot wound path.",
+  },
+  {
+    cavity: "Left pleural cavity",
+    finding:
+      "Approximately 50 mL of blood after surgical intervention — associated with chest gunshot wound path.",
+  },
+  {
+    cavity: "Peritoneal cavity",
+    finding: "No abnormal fluid accumulation.",
+  },
+  {
+    cavity: "Pericardial sac",
+    finding: "Surgically opened at hospital. No pericardial effusion on surgical examination.",
+  },
+]
+
+const deboseOrganFindings: OrganFinding[] = [
+  {
+    id: "do1",
+    organ: "Heart",
+    weightGrams: 270,
+    status: "normal",
+    observations:
+      "Occupies usual mediastinal site. Epicardial surfaces smooth. Coronary arteries normal, right-dominant pattern, no atherosclerotic luminal narrowing. Myocardium red-brown and firm. LV 1.5 cm, RV 0.4 cm, IVS 1.5 cm. Valve cusps free of fusion or vegetations. Aorta without aneurysm or dissection. Injury to aorta arch and superior vena cava previously described.",
+  },
+  {
+    id: "do2",
+    organ: "Right lung",
+    weightGrams: 230,
+    status: "critical",
+    observations:
+      "Hypoinflated. Parenchyma minimally congested, red-purple. Small amount of blood and fluid on sectioning. Pleural surface shows previously described gunshot injuries and mild anthracotic pigment. No consolidation or scarring.",
+  },
+  {
+    id: "do3",
+    organ: "Left lung",
+    weightGrams: 280,
+    status: "critical",
+    observations:
+      "Hypoinflated. Parenchyma minimally congested. Pleural surface shows previously described gunshot injuries. No consolidation or scarring. Pulmonary vessels patent.",
+  },
+  {
+    id: "do4",
+    organ: "Aorta & superior vena cava",
+    status: "critical",
+    observations:
+      "Arch of aorta perforated along the gunshot wound path. Superior vena cava perforated. No atherosclerotic changes. Intimal surfaces otherwise without aneurysm or dissection.",
+  },
+  {
+    id: "do5",
+    organ: "Stomach",
+    status: "normal",
+    observations:
+      "Intact mucosal surfaces; lumen contains approximately 350 mL of tan fluid. No pills or pill fragments. No ulceration or scarring.",
+  },
+  {
+    id: "do6",
+    organ: "Small and large intestines",
+    status: "normal",
+    observations: "Unremarkable. Appendix present.",
+  },
+  {
+    id: "do7",
+    organ: "Pancreas",
+    status: "normal",
+    observations: "Lobular, tan, normal but pale appearance. No necrosis, gross hemorrhage, or lesions. Ducts patent.",
+  },
+  {
+    id: "do8",
+    organ: "Liver",
+    weightGrams: 1850,
+    status: "normal",
+    observations:
+      "Intact capsule covering pale, red-tan parenchyma. No localizing masses or lesions. Intra- and extrahepatic ducts patent. Gallbladder contains trace dark green bile and no stones.",
+  },
+  {
+    id: "do9",
+    organ: "Right kidney",
+    weightGrams: 140,
+    status: "normal",
+    observations:
+      "Capsule strips without difficulty. Cortical surfaces smooth and pale. Cortices delineated from medullae. Renal vessels patent.",
+  },
+  {
+    id: "do10",
+    organ: "Left kidney",
+    weightGrams: 160,
+    status: "normal",
+    observations: "Capsule strips without difficulty. Cortical surfaces smooth and pale. Renal vessels patent.",
+  },
+  {
+    id: "do11",
+    organ: "Urinary bladder",
+    status: "normal",
+    observations: "Contains approximately 100 mL of urine. Mucosa unremarkable.",
+  },
+  {
+    id: "do12",
+    organ: "Prostate gland",
+    status: "normal",
+    observations: "Normal appearing on sectioning.",
+  },
+  {
+    id: "do13",
+    organ: "Testes",
+    status: "normal",
+    observations: "Free of trauma or significant natural disease processes.",
+  },
+  {
+    id: "do14",
+    organ: "Spleen",
+    weightGrams: 80,
+    status: "normal",
+    observations: "Smooth, intact capsule. Parenchyma red-purple, uniform. Regional lymph nodes grossly unremarkable.",
+  },
+  {
+    id: "do15",
+    organ: "Adrenal glands",
+    status: "normal",
+    observations: "Unremarkable. Normal cortex and medulla bilaterally.",
+  },
+  {
+    id: "do16",
+    organ: "Pituitary gland",
+    status: "normal",
+    observations: "Unremarkable.",
+  },
+  {
+    id: "do17",
+    organ: "Thyroid gland",
+    status: "normal",
+    observations: "Unremarkable externally. Sectioning shows absence of lesions.",
+  },
+  {
+    id: "do18",
+    organ: "Brain",
+    weightGrams: 1240,
+    status: "normal",
+    observations:
+      "Externally unremarkable and symmetrical. Blood vessels at base intact and free of atherosclerosis. Multiple coronal sections of cerebrum, cerebellum, and brainstem reveal absence of significant natural disease processes. Scalp reflects without hemorrhage.",
+  },
+  {
+    id: "do19",
+    organ: "Cervical spine and anterior neck",
+    status: "normal",
+    observations:
+      "No hemorrhage into strap muscles. Thyroid cartilage and hyoid bone intact. Cervical spine free of injury. Upper airway patent.",
+  },
+  {
+    id: "do20",
+    organ: "Musculoskeletal system",
+    status: "normal",
+    observations:
+      "Major muscle groups show no atrophic changes, symmetrical development. Axial and appendicular skeleton unremarkable except previously described rib fracture (posterior left 5th rib).",
+  },
+]
+
+const debosePathologySamples: PathologySample[] = [
+  {
+    id: "dp1",
+    region: "Right chest — wound track",
+    finding:
+      "Wound path: skin → subcutaneous tissue → muscle → right pleural cavity → sternum at junction with right 1st rib → upper lobe right lung → arch of aorta → superior vena cava → upper and lower lobes left lung → left pleural cavity → posterior left 5th rib (fracture) → muscle → subcutaneous → skin (exit). Approximately 1000 mL blood in right pleural cavity.",
+    severity: "high",
+  },
+  {
+    id: "dp2",
+    region: "Left thigh — wound track",
+    finding:
+      "Wound path: skin → subcutaneous tissue → muscle of left thigh → soft tissue of left pubic area. Projectile recovered at approximately 31⅞ inches below top of head, 4 inches left of anterior midline, in subcutaneous tissue of pubic area. Hemorrhage along wound path.",
+    severity: "high",
+  },
+  {
+    id: "dp3",
+    region: "Toxicology — peripheral blood",
+    finding:
+      "Ethanol detected at non-toxic level. Cannabinoids detected at levels consistent with frequent use. No other substances reported.",
+    severity: "low",
+  },
+  {
+    id: "dp4",
+    region: "Representative organ sections",
+    finding:
+      "Retained in formalin without preparation of glass slides. No microscopic sections prepared for this report.",
+    severity: "low",
+  },
+]
+
+const deboseResuscitationTimeline: ResuscitationEvent[] = [
+  {
+    id: "dr1",
+    time: "May 1, 2020 — prior to 22:55",
+    location: "Scene",
+    description: "Altercation with law enforcement personnel resulting in gunshot wounds.",
+    kind: "deterioration",
+  },
+  {
+    id: "dr2",
+    time: "Scene / Transit",
+    location: "Local hospital",
+    description: "Decedent transported to local hospital. Resuscitation efforts commenced.",
+    kind: "intervention",
+  },
+  {
+    id: "dr3",
+    time: "Hospital",
+    location: "Local hospital",
+    description:
+      "Medical intervention: endotracheal intubation, intraosseous catheter (lateral right arm), vascular access (right subclavian), 14-inch chest tube incision (right), 11-inch sutured thoracotomy incision (left), pericardial sac surgically opened.",
+    kind: "intervention",
+  },
+  {
+    id: "dr4",
+    time: "May 1, 2020 — 22:55",
+    location: "Local hospital",
+    description: "Pronounced dead. Date and time of death: May 1, 2020 at 2255 hours.",
+    kind: "outcome",
+  },
+]
+
+const deboseInvestigationNotes: InvestigationNote[] = [
+  {
+    id: "dn1",
+    author: "Meredith A. Frank, M.D.",
+    role: "Assistant Medical Examiner",
+    timestamp: "May 2, 2020 — 08:45",
+    content:
+      "Autopsy performed at the Denver Office of the Medical Examiner beginning at 08:45. Conor McGuinn assisting.",
+    tag: "observation",
+  },
+  {
+    id: "dn2",
+    author: "Meredith A. Frank, M.D.",
+    role: "Assistant Medical Examiner",
+    timestamp: "Gross examination",
+    content:
+      "Two gunshot wounds identified. Chest wound (right to left, front to back, downward) perforated aorta and superior vena cava — rapidly fatal injuries. Thigh wound (left to right, slightly back to front, upward) injured soft tissue only; projectile recovered.",
+    tag: "observation",
+  },
+  {
+    id: "dn3",
+    author: "Meredith A. Frank, M.D.",
+    role: "Assistant Medical Examiner",
+    timestamp: "Gross examination",
+    content:
+      "No soot deposition or gunpowder stippling on the skin surrounding either entrance wound — consistent with an indeterminate range of fire (not close range).",
+    tag: "observation",
+  },
+  {
+    id: "dn4",
+    author: "Meredith A. Frank, M.D.",
+    role: "Assistant Medical Examiner",
+    timestamp: "Clinicopathologic correlation",
+    content:
+      "Minor cutaneous blunt force injuries of the face and both knees are consistent with terminal collapse and are not indicative of a separate assault event.",
+    tag: "conclusion",
+  },
+  {
+    id: "dn5",
+    author: "James L. Caruso, M.D.",
+    role: "Chief Medical Examiner / Coroner",
+    timestamp: "June 12, 2020",
+    content:
+      "Cause of death: gunshot wound of the chest injuring both lungs, the aorta, and the superior vena cava. Manner of death: homicide.",
+    tag: "conclusion",
+  },
+]
+
+const deboseCauseOfDeath: AnalysisSection["causeOfDeath"] = {
+  primary: "Gunshot wound of the chest",
+  immediate: "Perforation of the aorta (arch) and superior vena cava with bilateral hemothorax",
+  underlying: "Homicidal gunshot wound",
+  contributing: [
+    "Bilateral hemothorax (right: ~1000 mL, left: ~50 mL after surgery)",
+    "Hemorrhage along the wound path",
+    "Non-toxic ethanol level (incidental)",
+    "Cannabinoids at levels consistent with frequent use (incidental)",
+  ],
+  manner: "homicide",
+  confidence: 98,
+  mechanism:
+    "Perforating gunshot wound traversing the right lung, aortic arch, and superior vena cava produced massive hemorrhage and bilateral hemothorax. Rapid exsanguination and cardiopulmonary collapse were unsurvivable despite surgical intervention.",
+  reasoning:
+    "Cause of death anatomically definitive at autopsy. Manner is homicide: the chest wound trajectory (right to left, front to back, downward), the absence of close-range discharge stippling from either entrance, and the circumstances of the altercation are consistent with homicide by firearm. The thigh wound contributed to hemorrhage but was not independently fatal.",
+  extractedFrom: [
+    "Autopsy Report — Anatomic Diagnoses",
+    "Autopsy Report — Opinion (James L. Caruso, M.D.)",
+    "Autopsy Report — External Examination",
+    "Autopsy Report — Internal Examination",
+  ],
+}
+
+const deboseKeyFindings: KeyFinding[] = [
+  {
+    id: "dkf1",
+    text: "Perforating gunshot wound of the chest — right to left, front to back, downward — perforating the aortic arch and superior vena cava. Direct cause of death.",
+    weight: "high",
+  },
+  {
+    id: "dkf2",
+    text: "Bilateral hemothorax: ~1000 mL (right) and ~50 mL (left after surgery). Massive hemorrhage incompatible with survival.",
+    weight: "high",
+  },
+  {
+    id: "dkf3",
+    text: "No soot deposition or gunpowder stippling at either entrance wound — indeterminate range of fire, not close-contact.",
+    weight: "medium",
+  },
+  {
+    id: "dkf4",
+    text: "Second gunshot wound to lateral left thigh — soft tissue injury only; projectile recovered in subcutaneous pubic tissue. Not independently fatal.",
+    weight: "medium",
+  },
+  {
+    id: "dkf5",
+    text: "Minor cutaneous blunt force injuries of face and both knees consistent with terminal collapse.",
+    weight: "low",
+  },
+  {
+    id: "dkf6",
+    text: "Toxicology: non-toxic ethanol and cannabinoids (frequent-use pattern). No other substances detected.",
+    weight: "low",
+  },
+  {
+    id: "dkf7",
+    text: "No evidence of significant natural disease processes — no pre-existing cardiopulmonary disease or contributory condition.",
+    weight: "low",
+  },
+]
+
+const deboseTotalOrganWeight = deboseOrganFindings.reduce((s, o) => s + (o.weightGrams ?? 0), 0)
+
+export const deboseCase: AutopsyCase = {
+  caseId: "AUT-2020-1949",
+  caseTitle: "William Debose — Homicide · Gunshot Wound of the Chest",
+  status: "completed",
+  manner: "homicide",
+
+  subject: deboseSubject,
+  examiner: "Meredith A. Frank, M.D. (AME) / James L. Caruso, M.D. (Chief ME)",
+  examinationDate: "May 2, 2020 — 08:45",
+  facility: "City and County of Denver, Office of the Medical Examiner",
+  pronouncedAt: "May 1, 2020 — 22:55 (local hospital)",
+  openedDate: "May 2, 2020",
+  lastUpdated: "June 12, 2020",
+
+  summary:
+    "21-year-old male sustained two gunshot wounds during an altercation with law enforcement. The chest wound (right to left, front to back, downward) perforated both lungs, the aortic arch, and the superior vena cava, producing bilateral hemothorax and exsanguination despite emergency surgical intervention. The thigh wound injured soft tissue only; one projectile was recovered. No close-range discharge indicators were present at either entrance wound. Manner of death: homicide. No significant natural disease processes identified.",
+
+  keyFindings: deboseKeyFindings,
+
+  clinicalHistory: {
+    narrative:
+      "A 21-year-old male was involved in an altercation with law enforcement and sustained two gunshot wounds. He was transported to a local hospital where resuscitation efforts — including endotracheal intubation, chest tube placement, thoracotomy, and vascular access — were unsuccessful. He was pronounced dead at 2255 hours on May 1, 2020.",
+    presentingComplaints: ["Gunshot wounds (chest and left thigh)", "Cardiopulmonary collapse"],
+    interventions: [
+      "Endotracheal intubation",
+      "Intraosseous catheter — lateral right arm",
+      "Vascular access device — right subclavian",
+      "14-inch chest tube incision — right",
+      "11-inch sutured thoracotomy incision — left",
+      "Pericardial sac surgically opened",
+    ],
+  },
+  resuscitationTimeline: deboseResuscitationTimeline,
+
+  externalExamination: {
+    description:
+      "Unembalmed adult male, 151 lbs, 69½ inches. Rigor mortis present and equal throughout. Livor mortis posterior and fixed except in areas exposed to pressure. Body temperature that of refrigeration unit. Body received unclad in unsealed body bag wrapped in hospital sheets.",
+    findings: deboseExternalFindings,
+    devicesInPlace: [
+      "Endotracheal tube",
+      "Intraosseous catheter — lateral right arm",
+      "Vascular access device — right subclavian",
+      "14-inch chest tube incision site — right",
+      "11-inch sutured thoracotomy incision site — left",
+      "Hospital identification band — right wrist",
+    ],
+  },
+  bodyCavities: deboseBodyCavities,
+
+  organFindings: deboseOrganFindings,
+  pathology: {
+    summary:
+      "Two gunshot wound tracks dominate the pathologic findings. The chest wound perforated major vessels (aorta and SVC) producing massive hemorrhage. The thigh wound produced local soft-tissue hemorrhage only. Toxicology detected non-toxic ethanol and cannabinoids. Representative organ sections were retained in formalin; no microscopic slides were prepared.",
+    samples: debosePathologySamples,
+  },
+
+  causeOfDeath: deboseCauseOfDeath,
+  correlation: {
+    summary:
+      "Cause and manner of death are unambiguous. Both entrance wounds lack stippling or soot, consistent with indeterminate (not close-range) discharge. One projectile recovered from the thigh track; none from the through-and-through chest wound. Crime laboratory received recovered projectile and trace evidence.",
+    notes: deboseInvestigationNotes,
+    unansweredQuestions: [
+      "Precise firing distance and relative positions of shooter and decedent at time of discharge.",
+      "Ballistic comparison of recovered projectile to specific firearm(s).",
+    ],
+    recommendedTests: [
+      "Ballistic analysis of recovered projectile.",
+      "Comparison with firearm(s) involved in the altercation.",
+      "Full toxicology quantitation report.",
+    ],
+  },
+
+  analysis: {
+    injuryPattern: {
+      summary:
+        "Two discrete gunshot wounds. (1) Chest: perforating entrance right upper chest → exit left upper back, traversing aorta and SVC — fatal. (2) Thigh: penetrating entrance lateral left thigh → projectile stopped in pubic subcutaneous tissue — non-fatal. Additional minor blunt-force abrasions on face and knees attributed to terminal collapse.",
+      findings: deboseExternalFindings,
+      overallAssessment:
+        "Injury pattern is consistent with two firearm discharges at indeterminate range. The chest wound trajectory and major-vessel perforation are the anatomic basis for death. Minor facial and knee abrasions are terminal-collapse artifacts and do not indicate a separate assault.",
+      extractedFrom: [
+        "Autopsy Report — Anatomic Diagnoses",
+        "Autopsy Report — External Examination",
+        "Autopsy Report — Internal Examination",
+      ],
+    },
+    causeOfDeath: deboseCauseOfDeath,
+    organCondition: {
+      summary:
+        "With the exception of the gunshot wound injuries to the lungs, aorta, and superior vena cava, all major organs are unremarkable. There is no evidence of pre-existing cardiovascular, pulmonary, or systemic disease. Both lungs are hypoinflated secondary to hemothorax.",
+      findings: deboseOrganFindings,
+      extractedFrom: ["Autopsy Report — Internal Examination"],
+    },
+    tissuePathology: {
+      summary:
+        "Pathology is entirely traumatic. The chest wound track perforated the aortic arch and SVC producing ~1050 mL of combined hemothorax. The thigh wound track terminated in the pubic subcutaneous tissue. Toxicology: non-toxic ethanol and cannabinoids consistent with frequent use.",
+      samples: debosePathologySamples,
+      extractedFrom: [
+        "Autopsy Report — Evidence of Injury",
+        "Autopsy Report — Drugs and Alcohol",
+      ],
+    },
+    investigationNotes: {
+      summary:
+        "Manner of death is homicide. Cause anatomically definitive. Key open items are ballistic analysis of the recovered projectile and quantitative toxicology.",
+      notes: deboseInvestigationNotes,
+      unansweredQuestions: [
+        "Precise firing distance and relative positioning at time of discharge.",
+        "Ballistic comparison of recovered projectile to specific firearm(s).",
+      ],
+      recommendedTests: [
+        "Ballistic analysis of recovered projectile.",
+        "Comparison with firearm(s) involved in the altercation.",
+        "Full toxicology quantitation report.",
+      ],
+      extractedFrom: [
+        "Autopsy Report — Opinion",
+        "Autopsy Report — Additional Procedures",
+        "Autopsy Report — Specimens",
+      ],
+    },
+  },
+
+  totalOrganWeightGrams: Math.round(deboseTotalOrganWeight),
+  organsExamined: deboseOrganFindings.length,
+  resuscitationDurationMinutes: 0, // Time of death at scene/hospital; duration not specified in report
+}
+
+export const caseList = [autopsyCase, deboseCase]
 
 export function getCaseById(caseId: string): AutopsyCase | null {
-  if (caseId === autopsyCase.caseId) return autopsyCase
-  return null
+  return caseList.find((c) => c.caseId === caseId) ?? null
 }

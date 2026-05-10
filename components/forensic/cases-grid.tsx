@@ -29,7 +29,7 @@ export function CasesGrid() {
         </div>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">Case Files</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {cases.length} case under analysis · all data extracted from ingested autopsy documents.
+          {cases.length} {cases.length === 1 ? "case" : "cases"} under analysis · all data extracted from ingested autopsy documents.
         </p>
       </div>
 
